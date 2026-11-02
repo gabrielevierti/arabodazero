@@ -23,7 +23,7 @@ export function safeValue(value: unknown, depth = 0): boolean {
   );
 }
 const known =
-  /^(preferences$|micro:|saved:|assessment:|progress:|answer:|note:|card:|quiz:|lesson:|activity:|review:|study:|alphabet:|session:|last$|goal$)/;
+  /^(preferences$|micro:|saved:|assessment:|progress:|answer:|note:|card:|quiz:|lesson:|activity:|review:|study:|alphabet:|writing:|session:|last$|goal$|onboarding$)/;
 export function parseBackup(text: string): {
   data: StoredRecords;
   unknown: string[];

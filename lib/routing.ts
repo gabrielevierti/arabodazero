@@ -4,6 +4,7 @@ const paths: Record<string, string> = {
   micro: "micro",
   course: "course",
   alphabet: "alphabet",
+  writing: "writing",
   practice: "practice",
   review: "review",
   flashcards: "flashcards",

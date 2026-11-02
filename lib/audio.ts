@@ -39,9 +39,7 @@ export async function playArabic(
   }
   if (!("speechSynthesis" in window))
     throw Error("Speech synthesis unavailable");
-  const voice = speechSynthesis
-    .getVoices()
-    .find((v) => v.lang.toLowerCase().startsWith("ar"));
+  const voice = await pickArabicVoice();
   if (!voice) throw Error("No Arabic voice installed");
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text.replace(/[\u2066-\u2069]/g, ""));
@@ -50,4 +48,30 @@ export async function playArabic(
   u.rate = rate;
   speechSynthesis.speak(u);
   return () => speechSynthesis.cancel();
+}
+
+/** Voices load asynchronously in Chrome: wait briefly for the list. */
+function voices(): Promise<SpeechSynthesisVoice[]> {
+  const now = speechSynthesis.getVoices();
+  if (now.length) return Promise.resolve(now);
+  return new Promise((resolve) => {
+    const done = () => resolve(speechSynthesis.getVoices());
+    speechSynthesis.addEventListener("voiceschanged", done, { once: true });
+    setTimeout(done, 1200);
+  });
+}
+/** Prefers natural/neural voices and Modern Standard Arabic locales. */
+export async function pickArabicVoice(): Promise<SpeechSynthesisVoice | undefined> {
+  if (!("speechSynthesis" in window)) return undefined;
+  const arabic = (await voices()).filter((v) => v.lang.toLowerCase().startsWith("ar"));
+  const score = (v: SpeechSynthesisVoice) =>
+    (/natural|neural|premium|enhanced|online|google/i.test(v.name) ? 4 : 0) +
+    (/^ar[-_](sa|xa|001)/i.test(v.lang) ? 2 : /^ar[-_](eg|ae|jo|lb)/i.test(v.lang) ? 1 : 0) +
+    (v.localService ? 0 : 1);
+  return arabic.sort((a, b) => score(b) - score(a))[0];
+}
+/** For the settings page: which Arabic voice the device offers, if any. */
+export async function arabicVoiceStatus(): Promise<{ available: boolean; name?: string }> {
+  const v = await pickArabicVoice();
+  return v ? { available: true, name: v.name } : { available: false };
 }

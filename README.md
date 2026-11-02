@@ -22,8 +22,10 @@ Così ho iniziato a costruire lo strumento che avrei voluto trovare. Arabo da Ze
 - Lezioni disponibili direttamente sul sito, con spiegazioni, esempi e tabelle.
 - Esercizi interattivi, con correzione automatica per le risposte vincolate e modelli di riferimento per le risposte aperte.
 - Alfabeto interattivo, con le 28 lettere di base, le forme di congiunzione, parole di esempio, sintesi vocale del dispositivo e un quiz di cinque domande.
-- Ripasso automatico degli errori e flashcard personali, con pratica di follow-up programmata.
-- Sessioni di studio guidate, che combinano ripasso, un passo di lettura e pratica intorno a un obiettivo flessibile di 15 minuti.
+- Scrittura a mano: ricalca, copia e scrivi a memoria ogni lettera nelle quattro posizioni, con il dito o con la penna.
+- Correzione tollerante: una risposta giusta scritta senza vocali, con una hamza diversa o con ة/ه scambiate viene riconosciuta e spiegata invece di essere segnata come sbagliata; se la correzione automatica sbaglia, puoi segnare tu la risposta come corretta.
+- Ripasso automatico degli errori e flashcard, anche dalle parole di ogni lezione, con ripetizione dilazionata.
+- Sessioni di studio guidate, che combinano ripasso, un passo di lettura e pratica intorno a un obiettivo giornaliero che scegli tu.
 - Monitoraggio chiaro dei progressi, inclusi tempo di studio attivo, passi di lettura, domande a cui si è risposto, traguardi e stime trasparenti per il livello successivo.
 - Note e lezioni personali, per adattare lo studio alle tue esigenze.
 - Progressi salvati nel browser, con esportazione e importazione di backup.
@@ -45,6 +47,27 @@ npm run build      # versione pubblicabile in dist/
 ```
 
 I volumi in PDF si importano con gli script in `scripts/volume-import/` (vedi il README della cartella): il testo arabo viene ricostruito dai glifi del PDF e rimesso in ordine logico, gli esercizi vengono collegati alle soluzioni.
+
+### Correzioni ai contenuti importati
+
+L'importazione dai PDF lascia alcuni difetti tipici (parole arabe incollate, celle di tabella fuse, a capo nel mezzo delle frasi, feedback generici). `scripts/repair-pdf-artifacts.mjs` li corregge in modo ripetibile su `public/course/`:
+
+```sh
+node scripts/repair-pdf-artifacts.mjs --report   # cosa cambierebbe, senza scrivere
+node scripts/repair-pdf-artifacts.mjs            # applica le correzioni
+node scripts/repair-pdf-artifacts.mjs --check    # esce con errore se resta qualcosa da correggere
+npm run content:qa                               # controllo generale dei contenuti
+```
+
+Le tabelle che non si possono ricostruire in automatico (coniugazioni, pronomi, «Errori tipici») sono corrette a mano in `scripts/content-fixes/tables.json`, indicizzate con l'impronta del contenuto originale: se reimporti una lezione dai PDF, le correzioni a mano vengono applicate solo alle tabelle rimaste identiche. Il controllo `glued-arabic` di `content:qa` segnala le parole che sembrano ancora incollate e vanno guardate a occhio.
+
+### Interfaccia
+
+Lo stile è in `app/design.css` (caricato dopo `app/globals.css`): colori, spazi e raggi sono variabili CSS con le versioni chiara e scura. I caratteri (Inter e Noto Naskh Arabic, licenza OFL) sono in `public/fonts/` e vengono salvati per l'uso offline.
+
+```sh
+npx playwright test   # test end-to-end, accessibilità (axe) e tema scuro su mobile
+```
 
 ## Feedback, correzioni e contributi
 

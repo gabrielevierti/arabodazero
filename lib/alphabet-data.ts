@@ -28,3 +28,21 @@ export const letters = [
   ["و", "wāw", "w / ū", "وَاو", "وَرْد", "rose", "roses"],
   ["ي", "yāʾ", "j / ī", "يَاء", "يَد", "mano", "hand"],
 ];
+
+/** The six letters that never join the following letter. */
+export const NON_JOINING = "\u0627\u062F\u0630\u0631\u0632\u0648";
+/**
+ * The four positional forms, made visible with a tatwīl. A letter that does
+ * not join the next one has no separate initial form (it is written isolated)
+ * and its medial form is the final one.
+ */
+export function letterForms(letter: string) {
+  const joins = !NON_JOINING.includes(letter);
+  return {
+    joins,
+    isolated: letter,
+    initial: joins ? letter + "\u0640" : letter,
+    medial: joins ? "\u0640" + letter + "\u0640" : "\u0640" + letter,
+    final: "\u0640" + letter,
+  };
+}

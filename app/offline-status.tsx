@@ -120,7 +120,7 @@ export function OfflineSettings() {
       <h2>{t("Contenuti offline", "Offline content")}</h2>
       <p>
         {t(
-          "Solo i contenuti aperti vengono conservati, oltre all’app. I progressi restano separati in IndexedDB. Dopo la rimozione della cache servirà una connessione per riaprire i contenuti.",
+          "Le lezioni che apri restano disponibili anche senza connessione. Svuotare questa memoria non tocca i tuoi progressi: servirà solo la connessione per riaprire le lezioni.",
           "Only opened content is kept, alongside the app. Progress stays separately in IndexedDB. After clearing the cache you will need a connection to reopen content.",
         )}
       </p>

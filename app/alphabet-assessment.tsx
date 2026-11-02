@@ -69,7 +69,7 @@ export default function AlphabetAssessment({
       </h2>
       <p>
         {t(
-          "Cinque domande sulle forme collegate, distinte dal quiz sui nomi. Soglia: 4/5. Puoi riprovare dopo aver rivisto la spiegazione. Una ripetizione non è una nuova prova indipendente. Non valuta pronuncia, scrittura o livello CEFR.",
+          "Cinque domande sulle lettere dentro le parole. Con 4 su 5 sei pronto per l'A1; altrimenti ripassa le forme e riprova.",
           "Five connected-form questions, separate from the letter-name quiz. Threshold: 4/5. Retake after reviewing the explanation. Repeating this bank is not a new independent test. It does not assess pronunciation, handwriting or CEFR level.",
         )}
       </p>

@@ -16,5 +16,6 @@ CC BY-SA 4.0 or another selected licence. No such licence is assigned here.
 
 Dependencies, external assets and translation models retain their respective
 licences and authorship; this statement does not claim ownership of them.
-Translation model provenance is documented in TRANSLATIONS.md. No model weights
-or purported native-speaker recordings are distributed.
+The English archive in public/course/en is machine-assisted, is not served by the
+site and is kept only for comparison. No model weights or purported
+native-speaker recordings are distributed.

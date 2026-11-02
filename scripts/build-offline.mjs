@@ -24,7 +24,9 @@ const shell = [
   "favicon.svg",
   "manifest.webmanifest",
   ...Object.keys(files).filter(
-    (x) => x.startsWith("assets/") && /index-.*\.(js|css)$/.test(x),
+    (x) =>
+      (x.startsWith("assets/") && /index-.*\.(js|css)$/.test(x)) ||
+      /^fonts\/.*\.woff2$/.test(x),
   ),
 ];
 fs.writeFileSync(

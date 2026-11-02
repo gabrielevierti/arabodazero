@@ -1,26 +1,28 @@
-import {tr,useLanguage} from "../lib/i18n";
-("use client");
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
-
-const BookLibrary = lazy(() => import("./book-library"));
-import OfflineStatus, { OfflineSettings } from "./offline-status";
-import Navigation from "./navigation";
+import OfflineStatus from "./offline-status";
+import { Sidebar, MobileBar, sectionOf } from "./navigation";
 import CourseHub from "./course-hub";
-import Preferences, { applyPreferences } from "./preferences";
+import StudyDashboard from "./study-dashboard";
+import { applyPreferences } from "./preferences";
 import { useDialogFocus } from "../lib/use-dialog-focus";
 import CourseIndex from "./course-index";
 import { routeHash, parseRoute } from "../lib/routing";
 import { useProgressStore } from "../lib/use-progress-store";
-import BackupManager from "./backup-manager";
 import { LEVELS, LEVEL_NAMES, MAIN_TRACKS, levelOf, type Level } from "../lib/levels";
+import { PracticeHub, ErrorReview } from "./learning-hub";
+import { errorQueue, nextReview } from "../lib/learning";
+import { useStudyTime } from "../lib/use-study-time";
+import { requestPersistence } from "../lib/persistence";
+import { Icon } from "./icons";
+import metadata from "../data/study-metadata.json";
 
+const BookLibrary = lazy(() => import("./book-library"));
 const Alphabet = lazy(() => import("./alphabet"));
 const Progress = lazy(() => import("./progress"));
 const GuidedSession = lazy(() => import("./guided-session"));
-import { PracticeHub, ErrorReview } from "./learning-hub";
-import { nextReview } from "../lib/learning";
-import { useStudyTime } from "../lib/use-study-time";
-import metadata from "../data/study-metadata.json";
+const HandwritingStudio = lazy(() => import("./handwriting-studio"));
+const SettingsPage = lazy(() => import("./settings-page"));
+const LessonDecks = lazy(() => import("./lesson-decks"));
 const NativeCourse = lazy(() => import("./native-course"));
 const NativeResource = lazy(() =>
   import("./native-course").then((m) => ({ default: m.NativeResource })),
@@ -35,89 +37,27 @@ const normalize = (s: string) =>
     .trim()
     .toLocaleLowerCase()
     .replace(/\s+/g, " ");
-function Icon({ name, size = 20 }: { name: string; size?: number }) {
-  const p: Record<string, React.ReactNode> = {
-    home: (
-      <>
-        <rect x="3" y="3" width="7" height="7" rx="2" />
-        <rect x="14" y="3" width="7" height="7" rx="2" />
-        <rect x="3" y="14" width="7" height="7" rx="2" />
-        <rect x="14" y="14" width="7" height="7" rx="2" />
-      </>
-    ),
-    book: (
-      <>
-        <path d="M12 5C8 2 4 3 2 4v15c4-2 7-1 10 1 3-2 6-3 10-1V4c-4-2-7-1-10 1Z" />
-        <path d="M12 5v15" />
-      </>
-    ),
-    repeat: (
-      <>
-        <path d="M20 7a9 9 0 0 0-15-2L2 8m0-6v6h6M4 17a9 9 0 0 0 15 2l3-3m0 6v-6h-6" />
-      </>
-    ),
-    chart: (
-      <>
-        <path d="M4 3v18h18M9 16v-5m5 5V7m5 9V3" />
-      </>
-    ),
-    plus: <path d="M12 5v14M5 12h14" />,
-    arrow: <path d="M4 12h16m-6-6 6 6-6 6" />,
-    check: <path d="m5 12 4 4L20 5" />,
-    settings: (
-      <>
-        <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2" />
-      </>
-    ),
-    clock: (
-      <>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 6v6l4 2" />
-      </>
-    ),
-    search: (
-      <>
-        <circle cx="10" cy="10" r="6" />
-        <path d="m15 15 6 6" />
-      </>
-    ),
-  };
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {p[name] || p.book}
-    </svg>
-  );
-}
-export default function App() {
-  return (
-    <CourseIndex>
-      {(course) => (
-        <>
-          <Academy course={course} />
-        </>
-      )}
-    </CourseIndex>
-  );
-}
-function SectionLoading(){return <section className="panel section-loading" role="status" aria-live="polite"><span className="eyebrow">ARABO DA ZERO</span><h2>Prepariamo questa sezione…</h2><p>Al primo accesso può servire qualche istante.</p><div className="loading-placeholder" aria-hidden="true"/><div className="loading-placeholder short" aria-hidden="true"/></section>}
-function Academy({ course }: { course: typeof import("../data/course.json") }) {
-  const language = useLanguage();
+/** Views where the active study timer runs. */
+const STUDY_VIEWS = ["lesson", "alphabet", "writing", "review", "flashcards"];
 
-  const t = (it: string, en: string) => (language === "en" ? en : it);
+export default function App() {
+  return <CourseIndex>{(course) => <Academy course={course} />}</CourseIndex>;
+}
+function SectionLoading() {
+  return (
+    <section className="az-loading" role="status" aria-live="polite">
+      <span className="az-eyebrow">Arabo da Zero</span>
+      <h2>Un attimo…</h2>
+      <div className="az-skeleton" aria-hidden="true" />
+      <div className="az-skeleton short" aria-hidden="true" />
+    </section>
+  );
+}
+function Academy({ course }: { course: typeof import("../data/course.json") }) {
   const [entryTab, setEntryTab] = useState("learn"),
     [sessionId, setSessionId] = useState(0);
   const [resource, setResource] = useState("");
+  const [routeId, setRouteId] = useState("");
   const [view, setViewState] = useState("home"),
     [level, setLevel] = useState("A0"),
     [search, setSearch] = useState(""),
@@ -128,29 +68,16 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
     [reviewIndex, setReviewIndex] = useState(0),
     [quizAnswer, setQuizAnswer] = useState(""),
     [quizResult, setQuizResult] = useState("");
-  const {
-    data,
-    dataRef,
-    loaded,
-    sync,
-    error: storageError,
-    put,
-    flush,
-    load,
-    importData,
-  } = useProgressStore();
-  useStudyTime(loaded && ["lesson", "alphabet", "micro", "review", "flashcards"].includes(view), data, put);
+  const { data, dataRef, loaded, error: storageError, put, flush, load, importData } =
+    useProgressStore();
+  useStudyTime(loaded && STUDY_VIEWS.includes(view), data, put);
   const custom = Object.entries(data)
     .filter(([k, v]) => k.startsWith("lesson:") && v)
     .map(([, v]) => v);
   const lessons: any[] = [...course.lessons, ...custom];
   const current =
-    lessons.find(
-      (l) => l.id === data.last && !l.custom && !data["progress:" + l.id]?.done,
-    ) ||
-    lessons.find(
-      (l) => (metadata as any)[l.id]?.core && !data["progress:" + l.id]?.done,
-    ) ||
+    lessons.find((l) => l.id === data.last && !l.custom && !data["progress:" + l.id]?.done) ||
+    lessons.find((l) => (metadata as any)[l.id]?.core && !data["progress:" + l.id]?.done) ||
     lessons.find((l) => !l.custom) ||
     lessons[0];
   function startSession(review = false) {
@@ -160,11 +87,21 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
   }
   const cards = Object.entries(data)
     .filter(([k, v]) => k.startsWith("card:") && v)
-    .map(([key, v]) => ({ ...v, key }));
+    .map(([key, v]) => ({ ...(v as any), key }));
   const due = cards.filter((c) => !c.due || c.due <= day());
+  const errorsDue = loaded ? errorQueue(data).length : 0;
   const customExercises = Object.entries(data)
     .filter(([k, v]) => k.startsWith("quiz:") && v)
-    .map(([key, v]) => ({ ...v, key }));
+    .map(([key, v]) => ({ ...(v as any), key }));
+  // Ask the browser to keep the progress once the learner has actually started.
+  const askedPersistence = useRef(false);
+  useEffect(() => {
+    if (!loaded || askedPersistence.current) return;
+    if (Object.keys(data).some((k) => k.startsWith("progress:"))) {
+      askedPersistence.current = true;
+      void requestPersistence();
+    }
+  }, [loaded, data]);
   function openLesson(l: any, mode = "learn") {
     setEntryTab(mode);
     setSelected(l);
@@ -173,21 +110,16 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
     put("last", l.id);
     put("progress:" + l.id, {
       ...dataRef.current["progress:" + l.id],
-      openedAt:
-        dataRef.current["progress:" + l.id]?.openedAt ||
-        new Date().toISOString(),
+      openedAt: dataRef.current["progress:" + l.id]?.openedAt || new Date().toISOString(),
     });
     put("activity:" + day(), true);
     window.scrollTo(0, 0);
   }
   function progress(p: any) {
-    put("progress:" + selected.id, {
-      ...dataRef.current["progress:" + selected.id],
-      ...p,
-    });
+    put("progress:" + selected.id, { ...dataRef.current["progress:" + selected.id], ...p });
     put("activity:" + day(), true);
   }
-  const activeCard = due[reviewIndex % due.length];
+  const activeCard = due[reviewIndex % Math.max(1, due.length)];
   function review(rating: string) {
     if (!activeCard) return;
     const previous = activeCard.schedule || {
@@ -198,6 +130,7 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
     const schedule = nextReview(previous, rating);
     put(activeCard.key, {
       ...activeCard,
+      key: undefined,
       schedule,
       interval: schedule.interval,
       due: schedule.due,
@@ -239,36 +172,45 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
         level: f.get("level"),
       });
     setModal("");
-    setNotice("Contenuto aggiunto al tuo corso.");
+    setNotice(modal === "card" ? "Flashcard aggiunta al ripasso." : "Aggiunta al tuo corso.");
   }
   useDialogFocus(!!modal, () => setModal(""));
-  useEffect(() => { const update=()=>applyPreferences(data.preferences || {}); update(); const media=matchMedia("(prefers-color-scheme: dark)");media.addEventListener("change",update);return()=>media.removeEventListener("change",update); }, [data.preferences]);
+  useEffect(() => {
+    const update = () => applyPreferences(data.preferences || {});
+    update();
+    const media = matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [data.preferences]);
   const routeData = useRef({ lessons, loaded });
   routeData.current = { lessons, loaded };
+  /** Navigates by hash so that back/forward and shared links work. */
   function setView(v: string) {
-    if(v==='home')v='course';
-    const hash = routeHash({ view: v });
+    const [name, arg] = v.split("/");
+    const hash = routeHash(
+      name === "course" ? { view: name, level: arg } : arg ? { view: name, id: arg } : { view: name },
+    );
     if (location.hash !== hash) location.hash = hash;
-    else setViewState(v);
+    else setViewState(name);
   }
   useEffect(() => {
     const update = () => {
       const r = parseRoute(location.hash);
       if (r.view === "lesson") {
         const l = routeData.current.lessons.find((l) => l.id === r.id);
-        if (l) {
-          setSelected(l);
-        } else if (routeData.current.loaded) {
+        if (l) setSelected(l);
+        else if (routeData.current.loaded) {
           setViewState("missing");
           return;
         }
       }
       if (r.view === "resource") setResource(r.id || "");
+      setRouteId(r.id || "");
       if (r.level && levels.includes(r.level)) setLevel(r.level);
-      setViewState(['home','micro'].includes(r.view)?'course':r.view);
+      setViewState(r.view === "micro" ? "course" : r.view);
       setSearch("");
       requestAnimationFrame(() => {
-        document.getElementById("main-content")?.focus();
+        document.getElementById("main-content")?.focus({ preventScroll: true });
         window.scrollTo(0, 0);
       });
     };
@@ -276,31 +218,71 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
     window.addEventListener("hashchange", update);
     return () => window.removeEventListener("hashchange", update);
   }, [course, loaded]);
-  return (
-    <div className="shell">
-      <aside className="sidebar">
-        <a
-          className="brand"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setView("home");
-          }}
+  // the course list follows the level of the lesson in progress
+  const levelChosen = useRef(false);
+  useEffect(() => {
+    if (loaded && !levelChosen.current && !parseRoute(location.hash).level) {
+      levelChosen.current = true;
+      setLevel(levelOf(current));
+    }
+  }, [loaded]);
+  const badges = { review: errorsDue + due.length };
+  const levelLessons = lessons.filter((l) => levelOf(l) === level);
+  const shown = levelLessons.filter((l) =>
+    normalize(l.title + " " + l.code).includes(normalize(search)),
+  );
+  const mainTrack = shown.filter((l) => !l.custom && (!l.track || MAIN_TRACKS.includes(l.track)));
+  const sideTrack = shown.filter((l) => !l.custom && l.track && !MAIN_TRACKS.includes(l.track));
+  const personal = shown.filter((l) => l.custom);
+  const lessonRow = (l: any, i: number) => {
+    const p = data["progress:" + l.id];
+    const read = p?.read?.length || 0;
+    const pct = l.nativeChapters ? Math.round((read / l.nativeChapters) * 100) : 0;
+    return (
+      <li key={l.id}>
+        <button
+          type="button"
+          className={"az-lesson" + (p?.done ? " done" : p ? " started" : "") + (l.id === current.id ? " current" : "")}
+          disabled={!loaded}
+          onClick={() => openLesson(l)}
         >
-          <div className="brand-mark"><span>ع</span></div>
-          <span>
-            Arabic<span className="brand-sub">ACADEMY</span>
+          <span className="az-lesson-num" aria-hidden="true">
+            {p?.done ? <Icon name="check" size={18} /> : String(i + 1).padStart(2, "0")}
           </span>
-        </a>
-        <div className="side-label">{tr("IL TUO APPRENDIMENTO")}</div>
-        <Navigation view={view} navigate={setView} />
-        <div className="sidebar-bottom">
-          <button className="nav" onClick={() => setView("settings")}>
-            <Icon name="settings" />
-            {tr("Impostazioni")}
-          </button>
-        </div>
-      </aside>
+          <span className="az-lesson-body">
+            <small>
+              {l.code}
+              {l.id === current.id ? " · prossima" : ""}
+            </small>
+            <strong>{l.title}</strong>
+            <span className="az-lesson-meta">
+              {l.custom
+                ? "Lezione personale"
+                : `${l.nativeChapters || 0} passaggi · ${l.nativeItems || 0} esercizi`}
+            </span>
+          </span>
+          <span className="az-lesson-state">
+            {p?.done ? (
+              "Completata"
+            ) : p ? (
+              <>
+                <i aria-hidden="true">
+                  <b style={{ width: Math.max(6, pct) + "%" }} />
+                </i>
+                {pct}%
+              </>
+            ) : (
+              ""
+            )}
+          </span>
+          <Icon name="arrow" size={18} className="az-lesson-arrow" />
+        </button>
+      </li>
+    );
+  };
+  const section = sectionOf(view);
+  return (
+    <div className={"az-shell view-" + view}>
       <a
         href="#main-content"
         className="skip-link"
@@ -309,557 +291,392 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
           document.getElementById("main-content")?.focus();
         }}
       >
-        {t("Vai al contenuto", "Skip to content")}
+        Vai al contenuto
       </a>
-      <main>
-        <Navigation view={view} navigate={setView} mobile />
-        <div className="content" id="main-content" tabIndex={-1}>
+      <Sidebar view={view} navigate={setView} badges={badges} />
+      <MobileBar view={view} navigate={setView} badges={badges} />
+      <main className="az-main">
+        <div className={"az-content section-" + section} id="main-content" tabIndex={-1}>
           <OfflineStatus flush={flush} />
-
-          <Suspense fallback={<SectionLoading/>}>
-          {view === "missing" && (
-            <div className="panel">
-              <h1>{t("Pagina non trovata", "Page not found")}</h1>
-              <button className="primary" onClick={() => setView("course")}>
-                {t("Apri il percorso", "Open course")}
-              </button>
-            </div>
-          )}
           {storageError && (
-            <div className="notice" role="alert">
+            <div className="az-notice warning" role="alert">
               {storageError}
-              <button className="secondary" onClick={()=>{void (loaded?flush():load()).catch(()=>{})}}>Riprova il salvataggio</button>
+              <button
+                className="az-btn az-btn-outline az-btn-small"
+                onClick={() => {
+                  void (loaded ? flush() : load()).catch(() => {});
+                }}
+              >
+                Riprova il salvataggio
+              </button>
             </div>
           )}
           {notice && (
-            <div className="notice" role="status">
-              {tr(notice)}
-              <button
-                onClick={() => setNotice("")}
-                aria-label={tr("Chiudi avviso")}
-              >
-                ×
+            <div className="az-notice" role="status">
+              {notice}
+              <button className="az-icon-btn" onClick={() => setNotice("")} aria-label="Chiudi avviso">
+                <Icon name="close" size={18} />
               </button>
             </div>
           )}
-          {view === "alphabet" && loaded && <Alphabet data={data} put={put} />}
-          {["session", "error-session"].includes(view) && loaded && (
-            <GuidedSession
-              key={sessionId}
-              onRestart={() => startSession()}
-              review={view === "error-session"}
-              data={data}
-              put={put}
-              lessons={lessons}
-              current={current}
-              onExit={() => setView("home")}
-              onFlashcard={() => setModal("card")}
-            />
-          )}
-          {view === "course" && (
-            <>
-              <CourseHub data={data} lessons={lessons} current={current} loaded={loaded} onResume={()=>openLesson(current)} onStudy={()=>startSession()} onPractice={()=>setView('practice')} onReview={()=>setView('review')}/>
-              <div className="course-tools">
-              <button className="secondary" onClick={() => setView("alphabet")}>
-                {t("Alfabeto interattivo", "Interactive alphabet")}
-              </button>
-
-              </div><div className="heading spaced">
-                <div>
-                  <div className="eyebrow">LE LEZIONI</div>
-                  <h2>Il percorso, dalle basi in avanti.</h2>
-                  <p>
-                    {tr(
-                      "Segui l’ordine del corso oppure scegli cosa approfondire.",
-                    )}
-                  </p>
-                </div>
-                <button
-                  className="primary"
-                  disabled={!loaded}
-                  onClick={() => setModal("lesson")}
-                >
-                  <Icon name="plus" />
-                  {tr("Nuova lezione")}
+          <Suspense fallback={<SectionLoading />}>
+            {view === "missing" && (
+              <div className="az-card az-empty">
+                <h1>Pagina non trovata</h1>
+                <p>Il collegamento non corrisponde a nessuna lezione.</p>
+                <button className="az-btn az-btn-primary" onClick={() => setView("course")}>
+                  Apri il corso
                 </button>
               </div>
-              <div className="filters">
-                <div className="tabs">
-                  {levels.map((l) => (
-                    <button
-                      className={l === level ? "chosen" : ""}
-                      key={l}
-                      onClick={() => {
-                        setLevel(l);
-                        history.replaceState(
-                          null,
-                          "",
-                          routeHash({ view: "course", level: l }),
-                        );
-                      }}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
-                <label className="search">
-                  <Icon name="search" />
-                  <input
-                    placeholder={tr("Cerca una lezione…")}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </label>
-              </div>
-              <div className="section-heading">
-                <h2>
-                  {level} · {tr(LEVEL_NAMES[level as Level] || "")}
-                </h2>
-                <span className="muted">
-                  {lessons.filter((l) => levelOf(l) === level).length}{" "}
-                  {tr(" lezioni")}
-                </span>
-              </div>
-              <div className="lesson-list">
-                {lessons
-                  .filter(
-                    (l) =>
-                      levelOf(l) === level &&
-                      (l.title + " " + l.code)
-                        .toLowerCase()
-                        .includes(search.toLowerCase()),
-                  )
-                  .map((l, i) => (
-                    <button
-                      className="lesson-row"
-                      key={l.id}
-                      disabled={!loaded}
-                      onClick={() => openLesson(l)}
-                    >
-                      <span
-                        className={
-                          "lesson-number " +
-                          (data["progress:" + l.id]?.done ? "complete" : "")
-                        }
-                      >
-                        {data["progress:" + l.id]?.done ? (
-                          <Icon name="check" />
-                        ) : (
-                          String(i + 1).padStart(2, "0")
-                        )}
-                      </span>
-                      <div>
-                        <small>
-                          {l.code}
-                          {l.track &&
-                          !MAIN_TRACKS.includes(l.track)
-                            ? tr(" · Traccia complementare")
-                            : ""}
-                        </small>
-                        <h3>{l.title}</h3>
-                        <p>
-                          {l.custom
-                            ? tr("Contenuto personale")
-                            : `${l.nativeChapters || 0} ${language === "it" ? "passaggi" : "steps"} · ${l.nativeItems || 0} ${language === "it" ? "domande" : "questions"}`}
-                        </p>
-                      </div>
-                      <span className="lesson-state">
-                        {data["progress:" + l.id]?.done
-                          ? tr("Completata")
-                          : data["progress:" + l.id]
-                            ? tr("In corso")
-                            : tr("Da esplorare")}
-                      </span>
-                      <Icon name="arrow" />
-                    </button>
-                  ))}
-              </div>
-              {!lessons.some((l) => levelOf(l) === level) && (
-                <div className="empty panel">
-                  <span className="large-arabic">ق</span>
-                  <h2>{tr("Il prossimo capitolo è tuo.")}</h2>
-                  <p>
-                    {tr("I volumi ")}
-                    {level} {tr(" non sono ancora stati aggiunti.")}
-                    <br />
-                    {tr(
-                      "Intanto puoi creare lezioni ed esercizi personali per questo livello.",
-                    )}
-                  </p>
-                  <button
-                    className="primary"
-                    disabled={!loaded}
-                    onClick={() => setModal("lesson")}
-                  >
-                    {tr("Crea una lezione ")}
-                    {level}
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-          {view === "lesson" && selected && !selected.custom && (
-            <NativeCourse
-              entryTab={entryTab}
-              key={selected.id + entryTab}
-              lesson={selected}
-              data={data}
-              put={put}
-              onBack={() => {
-                setView("course");
-                setLevel(levelOf(selected));
-              }}
-              onNext={() => {
-                const next =
-                  lessons[lessons.findIndex((l) => l.id === selected.id) + 1];
-                if (next) openLesson(next);
-                else setView("stats");
-              }}
-              onFlashcard={() => setModal("card")}
-            />
-          )}
-          {view === "lesson" && selected?.custom && (
-            <>
-              <button className="back" onClick={() => setView("course")}>
-                {tr("← Torna al percorso")}
-              </button>
-              <div className="heading">
-                <h1>{selected.title}</h1>
-                <button
-                  className="primary"
-                  onClick={() =>
-                    progress({ done: !data["progress:" + selected.id]?.done })
-                  }
-                >
-                  {data["progress:" + selected.id]?.done
-                    ? tr("Completata · Annulla")
-                    : tr("Segna completata")}
-                </button>
-              </div>
-              <article className="panel custom-text">
-                {selected.content}
-              </article>
-              <div className="panel notes spaced">
-                <h2>{tr("Appunti")}</h2>
-                <textarea
-                  aria-label={tr("Appunti della lezione")}
-                  value={data["note:" + selected.id] || ""}
-                  onChange={(e) => put("note:" + selected.id, e.target.value)}
-                />
-              </div>
-            </>
-          )}
-          {view === "resource" && (
-            <NativeResource
-              key={resource}
-              id={resource}
-              onBack={() => setView("library")}
-            />
-          )}
-          {(view === "review" || view === "flashcards") && loaded && (
-            <>
-              <div className="heading">
-                <div>
-                  <div className="eyebrow">
-                    {t("IL SAPERE SI CONSOLIDA", "MAKE KNOWLEDGE STICK")}
-                  </div>
-                  <h1>
-                    {t(
-                      view === "flashcards" ? "Le tue flashcard." : "Ripassa, un passo alla volta.",
-                      "Review, one step at a time.",
-                    )}
-                  </h1>
-                  <p>
-                    {t(
-                      "Riprendi gli errori e ritrova le parole del tuo mazzo.",
-                      "Revisit mistakes and recall the words in your deck.",
-                    )}
-                  </p>
-                </div>
-              </div>
-              {view === "review" && <ErrorReview
+            )}
+            {view === "home" && (
+              <StudyDashboard
                 data={data}
                 lessons={lessons}
-                onStart={() => startSession(true)}
-              />}
-              <div className="heading">
-                <div>
-                  <div className="eyebrow">
-                    {t("IL TUO MAZZO PERSONALE", "YOUR PERSONAL DECK")}
+                current={current}
+                loaded={loaded}
+                dueCards={due.length}
+                onOpen={(l) => openLesson(l)}
+                onStudy={() => startSession()}
+                navigate={setView}
+                put={put}
+              />
+            )}
+            {view === "alphabet" && loaded && (
+              <Alphabet data={data} put={put} onWrite={(letter) => setView("writing/" + letter)} />
+            )}
+            {view === "writing" && loaded && (
+              <HandwritingStudio
+                key={routeId}
+                data={data}
+                put={put}
+                initialLetter={routeId}
+                onAlphabet={() => setView("alphabet")}
+              />
+            )}
+            {["session", "error-session"].includes(view) && loaded && (
+              <GuidedSession
+                key={sessionId}
+                onRestart={() => startSession()}
+                review={view === "error-session"}
+                data={data}
+                put={put}
+                lessons={lessons}
+                current={current}
+                onExit={() => setView("home")}
+                onFlashcard={() => setModal("card")}
+              />
+            )}
+            {view === "course" && (
+              <>
+                <CourseHub
+                  data={data}
+                  lessons={lessons}
+                  current={current}
+                  loaded={loaded}
+                  onResume={() => openLesson(current)}
+                  onStudy={() => startSession()}
+                />
+                <div className="az-course-tools">
+                  <div className="az-level-tabs" role="tablist" aria-label="Livello">
+                    {levels.map((l) => (
+                      <button
+                        role="tab"
+                        aria-selected={l === level}
+                        className={l === level ? "active" : ""}
+                        key={l}
+                        onClick={() => {
+                          setLevel(l);
+                          history.replaceState(null, "", routeHash({ view: "course", level: l }));
+                        }}
+                      >
+                        <strong>{l}</strong>
+                        <span>{LEVEL_NAMES[l as Level]}</span>
+                      </button>
+                    ))}
                   </div>
-                  <h2>{t("Le tue flashcard", "Your flashcards")}</h2>
-                  <p>
-                    {due.length} {tr(" flashcard da ripassare oggi · ")}
-                    {cards.length} {tr(" nel tuo mazzo")}
-                  </p>
+                  <label className="az-search">
+                    <Icon name="search" size={18} />
+                    <input
+                      type="search"
+                      aria-label="Cerca una lezione"
+                      placeholder="Cerca una lezione…"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </label>
                 </div>
-                <button
-                  className="primary"
-                  disabled={!loaded}
-                  onClick={() => setModal("card")}
-                >
-                  <Icon name="plus" />
-                  {tr("Nuova flashcard")}
-                </button>
-              </div>
-              {activeCard ? (
-                <div className="review-wrap">
-                  <div
-                    className="flashcard"
-                    onClick={() => setFlip(!flip)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setFlip(!flip);
-                      }
-                    }}
-                  >
-                    <span className="eyebrow">
-                      {levelOf(activeCard)} ·{" "}
-                      {flip ? tr("RISPOSTA") : tr("PROVA A RICORDARE")}
-                    </span>
-                    <div dir="auto">
-                      {flip ? activeCard.back : activeCard.front}
-                    </div>
-                    <small>
-                      {flip
-                        ? tr("Come è andata?")
-                        : tr("Tocca per girare la carta ↻")}
-                    </small>
-                  </div>
-                  {flip && (
-                    <div className="review-actions">
-                      <button
-                        className="secondary"
-                        onClick={() => review("again")}
-                      >
-                        {t("Da rivedere", "Again")}
-                      </button>
-                      <button
-                        className="primary"
-                        onClick={() => review("good")}
-                      >
-                        {t("Ricordata", "Good")}
-                      </button>
-                      <button
-                        className="secondary"
-                        onClick={() => review("hard")}
-                      >
-                        {t("Difficile", "Hard")}
-                      </button>
-                      <button
-                        className="secondary"
-                        onClick={() => review("easy")}
-                      >
-                        {t("Facile", "Easy")}
-                      </button>
-                    </div>
-                  )}
-                  <p className="muted centered">
-                    {tr("Le carte ricordate tornano a intervalli più lunghi.")}
-                  </p>
-                </div>
-              ) : (
-                <div className="empty panel">
-                  <Icon name="repeat" size={40} />
+                <div className="az-level-head">
                   <h2>
-                    {cards.length
-                      ? tr("Sei in pari per oggi.")
-                      : tr("Le parole diventano tue, ripassandole.")}
+                    {level} · {LEVEL_NAMES[level as Level] || ""}
                   </h2>
-                  <p>
-                    {cards.length
-                      ? tr("Le prossime carte appariranno alla data prevista.")
-                      : tr(
-                          "Crea il tuo primo mazzo con parole, regole o frasi delle lezioni.",
-                        )}
-                  </p>
-                  <button
-                    className="primary"
-                    disabled={!loaded}
-                    onClick={() => setModal("card")}
-                  >
-                    {tr("Aggiungi una flashcard")}
+                  <span className="az-muted">
+                    {levelLessons.filter((l) => data["progress:" + l.id]?.done).length} di{" "}
+                    {levelLessons.length} completate
+                  </span>
+                </div>
+                {mainTrack.length > 0 && <ol className="az-lessons">{mainTrack.map(lessonRow)}</ol>}
+                {sideTrack.length > 0 && (
+                  <>
+                    <h3 className="az-track-title">Tracce complementari</h3>
+                    <p className="az-small">Dialetti e approfondimenti: affiancali al percorso principale quando vuoi.</p>
+                    <ol className="az-lessons">{sideTrack.map(lessonRow)}</ol>
+                  </>
+                )}
+                {personal.length > 0 && (
+                  <>
+                    <h3 className="az-track-title">Le tue lezioni</h3>
+                    <ol className="az-lessons">{personal.map(lessonRow)}</ol>
+                  </>
+                )}
+                {!shown.length && (
+                  <div className="az-card az-empty">
+                    <p>Nessuna lezione corrisponde alla ricerca.</p>
+                  </div>
+                )}
+                <div className="az-course-foot">
+                  <button className="az-link" disabled={!loaded} onClick={() => setModal("lesson")}>
+                    <Icon name="plus" size={16} /> Crea una lezione personale
+                  </button>
+                  <button className="az-link" onClick={() => setView("practice")}>
+                    Solo esercizi, lezione per lezione <Icon name="arrow" size={16} />
                   </button>
                 </div>
-              )}
-              {cards.length > 0 && (
-                <>
-                  <h2 className="spaced">{tr("Il tuo mazzo")}</h2>
-                  <div className="lesson-list">
-                    {cards.map((c) => (
-                      <div className="deck-row" key={c.key}>
-                        <b dir="auto">{c.front}</b>
-                        <span dir="auto">{c.back}</span>
-                        <small>
-                          {levelOf(c)} {tr(" · prossimo ripasso ")}
-                          {c.due}
-                        </small>
-                        <button
-                          className="back"
-                          onClick={() => {
-                            if (confirm(tr("Eliminare questa flashcard?")))
-                              put(c.key, null);
+              </>
+            )}
+            {view === "lesson" && selected && !selected.custom && (
+              <NativeCourse
+                entryTab={entryTab}
+                key={selected.id + entryTab}
+                lesson={selected}
+                data={data}
+                put={put}
+                onBack={() => {
+                  setView("course/" + levelOf(selected));
+                }}
+                onNext={() => {
+                  const next = lessons[lessons.findIndex((l) => l.id === selected.id) + 1];
+                  if (next) openLesson(next);
+                  else setView("stats");
+                }}
+                onFlashcard={() => setModal("card")}
+              />
+            )}
+            {view === "lesson" && selected?.custom && (
+              <div className="az-custom-lesson">
+                <button className="az-back" onClick={() => setView("course")}>
+                  <Icon name="back" size={18} /> Torna al corso
+                </button>
+                <header className="az-page-head az-row-between">
+                  <div>
+                    <div className="az-eyebrow">Lezione personale · {levelOf(selected)}</div>
+                    <h1>{selected.title}</h1>
+                  </div>
+                  <button
+                    className="az-btn az-btn-primary"
+                    onClick={() => progress({ done: !data["progress:" + selected.id]?.done })}
+                  >
+                    {data["progress:" + selected.id]?.done ? "Completata · annulla" : "Segna come completata"}
+                  </button>
+                </header>
+                <article className="az-card custom-text">{selected.content}</article>
+                <div className="az-card notes">
+                  <h2 className="az-card-title">Appunti</h2>
+                  <textarea
+                    aria-label="Appunti della lezione"
+                    value={data["note:" + selected.id] || ""}
+                    onChange={(e) => put("note:" + selected.id, e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            {view === "resource" && (
+              <NativeResource key={resource} id={resource} onBack={() => setView("library")} />
+            )}
+            {(view === "review" || view === "flashcards") && loaded && (
+              <div className="az-review">
+                <header className="az-page-head">
+                  <div className="az-eyebrow">Ripasso</div>
+                  <h1>Quello che ripassi, resta.</h1>
+                  <p>
+                    Gli errori degli esercizi e le parole delle lezioni tornano qui a intervalli sempre più
+                    lunghi.
+                  </p>
+                </header>
+                <div className="az-review-grid">
+                  <ErrorReview data={data} lessons={lessons} onStart={() => startSession(true)} />
+                  <section className="az-card az-flash" aria-labelledby="flash-title">
+                    <div className="az-row-between">
+                      <h2 id="flash-title" className="az-card-title">
+                        <Icon name="cards" /> Flashcard
+                      </h2>
+                      <span className="az-muted">
+                        {due.length} da ripassare · {cards.length} nel mazzo
+                      </span>
+                    </div>
+                    {activeCard ? (
+                      <div className="review-wrap">
+                        <div
+                          className={"flashcard" + (flip ? " flipped" : "")}
+                          onClick={() => setFlip(!flip)}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={flip ? "Risposta: tocca per tornare alla domanda" : "Tocca per vedere la risposta"}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setFlip(!flip);
+                            }
                           }}
                         >
-                          {tr("Elimina")}
+                          <span className="az-eyebrow">
+                            {levelOf(activeCard)} · {flip ? "Risposta" : "Ricordi?"}
+                          </span>
+                          <div dir="auto" lang={/[\u0600-\u06FF]/.test(flip ? activeCard.back : activeCard.front) ? "ar" : undefined}>
+                            {flip ? activeCard.back : activeCard.front}
+                          </div>
+                          <small>{flip ? "Com'è andata?" : "Tocca per girare"}</small>
+                        </div>
+                        {flip && (
+                          <div className="az-rate">
+                            <button className="again" onClick={() => review("again")}>
+                              Di nuovo<small>oggi</small>
+                            </button>
+                            <button className="hard" onClick={() => review("hard")}>
+                              Difficile
+                            </button>
+                            <button className="good" onClick={() => review("good")}>
+                              Ricordata
+                            </button>
+                            <button className="easy" onClick={() => review("easy")}>
+                              Facile
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="az-empty-line">
+                        {cards.length
+                          ? "Sei in pari: le prossime carte arriveranno alla data prevista."
+                          : "Il mazzo è vuoto. Aggiungi le parole delle lezioni qui sotto, o crea una carta tua."}
+                      </p>
+                    )}
+                    <button className="az-link" disabled={!loaded} onClick={() => setModal("card")}>
+                      <Icon name="plus" size={16} /> Nuova flashcard
+                    </button>
+                  </section>
+                </div>
+                <LessonDecks lessons={lessons} data={data} put={put} />
+                {cards.length > 0 && (
+                  <details className="az-card az-deck-list">
+                    <summary>Tutte le carte del mazzo · {cards.length}</summary>
+                    <ul>
+                      {cards.map((c) => (
+                        <li key={c.key}>
+                          <b dir="auto" lang={/[\u0600-\u06FF]/.test(c.front) ? "ar" : undefined}>
+                            {c.front}
+                          </b>
+                          <span dir="auto">{c.back}</span>
+                          <small>{c.due}</small>
+                          <button
+                            className="az-link danger"
+                            onClick={() => {
+                              if (confirm("Eliminare questa flashcard?")) put(c.key, null);
+                            }}
+                          >
+                            Elimina
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
+            {view === "practice" && loaded && (
+              <>
+                <PracticeHub
+                  lessons={lessons}
+                  data={data}
+                  onOpen={(l) => openLesson(l, "practice")}
+                  onReview={() => setView("review")}
+                />
+                {customExercises.length > 0 && (
+                  <details className="personal-exercises az-card">
+                    <summary>I tuoi esercizi personali · {customExercises.length}</summary>
+                    {customExercises.map((q) => (
+                      <div className="az-card quiz" key={q.key}>
+                        <span className="az-eyebrow">{levelOf(q)} · risposta breve</span>
+                        <h2 dir="auto">{q.question}</h2>
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            const a = String(new FormData(e.currentTarget).get("answer"));
+                            const ok = normalize(a) === normalize(q.answer);
+                            put("answer:" + q.key, { text: a, rating: ok ? "good" : "again" });
+                            put("activity:" + day(), true);
+                            setQuizResult(q.key);
+                            setQuizAnswer(ok ? "Corretto." : "Risposta attesa: " + q.answer);
+                          }}
+                        >
+                          <input name="answer" dir="auto" aria-label="La tua risposta" placeholder="La tua risposta…" required />
+                          <button className="az-btn az-btn-primary">Verifica</button>
+                        </form>
+                        {quizResult === q.key && (
+                          <p role="status" className="quiz-result">
+                            {quizAnswer}
+                          </p>
+                        )}
+                        <button
+                          className="az-link danger"
+                          onClick={() => {
+                            if (confirm("Eliminare questo esercizio?")) put(q.key, null);
+                          }}
+                        >
+                          Elimina esercizio
                         </button>
                       </div>
                     ))}
-                  </div>
-                </>
-              )}
-            </>
-          )}
-          {view === "practice" && loaded && (
-            <>
-              <PracticeHub
+                  </details>
+                )}
+              </>
+            )}
+            {view === "stats" && loaded && (
+              <Progress data={data} lessons={lessons} onStudy={() => startSession()} />
+            )}
+            {view === "library" && (
+              <BookLibrary
+                books={course.books}
                 lessons={lessons}
                 data={data}
-                onOpen={(l) => openLesson(l, "practice")}
-                onReview={() => setView("review")}
+                put={put}
+                onLesson={(id) => {
+                  const l = lessons.find((l) => l.id === id);
+                  if (l) openLesson(l);
+                }}
+                onResource={(id) => {
+                  setResource(id);
+                  setViewState("resource");
+                  location.hash = routeHash({ view: "resource", id });
+                  window.scrollTo(0, 0);
+                }}
               />
-              {customExercises.length > 0 && (
-                <details className="personal-exercises panel spaced">
-                  <summary>
-                    {t(
-                      "I tuoi esercizi personali salvati",
-                      "Your saved personal exercises",
-                    )}{" "}
-                    · {customExercises.length}
-                  </summary>
-                  {customExercises.map((q) => (
-                    <div className="panel quiz" key={q.key}>
-                      <span className="eyebrow">
-                        {levelOf(q)} {tr(" · RISPOSTA BREVE")}
-                      </span>
-                      <h2 dir="auto">{q.question}</h2>
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const a = String(
-                            new FormData(e.currentTarget).get("answer"),
-                          );
-                          const ok = normalize(a) === normalize(q.answer);
-                          put("answer:" + q.key, {
-                            text: a,
-                            rating: ok ? "good" : "again",
-                          });
-                          put("activity:" + day(), true);
-                          setQuizResult(q.key);
-                          setQuizAnswer(
-                            ok
-                              ? "Risposta corretta!"
-                              : "La risposta non coincide con quella attesa: " +
-                                  q.answer,
-                          );
-                        }}
-                      >
-                        <input
-                          name="answer"
-                          dir="auto"
-                          aria-label={tr("La tua risposta")}
-                          placeholder={tr("La tua risposta…")}
-                          required
-                        />
-                        <button className="primary">{tr("Verifica")}</button>
-                      </form>
-                      {quizResult === q.key && (
-                        <p role="status" className="quiz-result">
-                          {tr(quizAnswer)}
-                        </p>
-                      )}
-                      <small>
-                        {tr(
-                          "Confronto esatto, ignorando maiuscole, spazi ripetuti e vocali brevi arabe. Le varianti equivalenti non vengono riconosciute automaticamente.",
-                        )}
-                      </small>
-                      <button
-                        className="back"
-                        onClick={() => {
-                          if (confirm(tr("Eliminare questo esercizio?")))
-                            put(q.key, null);
-                        }}
-                      >
-                        {tr("Elimina esercizio")}
-                      </button>
-                    </div>
-                  ))}
-                </details>
-              )}
-            </>
-          )}
-          {view === "stats" && loaded && (
-            <Progress
-              data={data}
-              lessons={lessons}
-              onStudy={() => startSession()}
-            />
-          )}
-          {view === "library" && <BookLibrary books={course.books} lessons={lessons} data={data} put={put} onLesson={id=>{const l=lessons.find(l=>l.id===id);if(l)openLesson(l)}} onResource={id=>{setResource(id);setViewState('resource');location.hash=routeHash({view:'resource',id});window.scrollTo(0,0)}}/>}
-          {view === "settings" && (
-            <>
-              <div className="heading">
-                <div>
-                  <div className="eyebrow">{tr("IL CORSO È TUO")}</div>
-                  <h1>{tr("Organizza il tuo spazio.")}</h1>
-                </div>
-              </div>
-              <div className="panel settings">
-                <h2>{tr("Progressi e backup")}</h2>
-                <p>
-                  {tr(
-                    "Lezioni completate, risposte, appunti e contenuti personali vengono salvati solo in questo browser e su questo dispositivo. Cancellando i dati del browser perderai i progressi: esporta regolarmente un backup. Non è prevista sincronizzazione automatica tra dispositivi. Puoi esportare una copia e ripristinarla.",
-                  )}
-                </p>
-                <OfflineSettings />
-                <Preferences data={data} put={put} />
-                <BackupManager
-                  data={data}
-                  disabled={!loaded}
-                  importData={importData}
-                />
-                <h2 className="spaced">{tr("Il tuo obiettivo quotidiano")}</h2>
-                <select
-                  aria-label={tr("Minuti al giorno")}
-                  value={data.goal || 15}
-                  disabled={!loaded}
-                  onChange={(e) => put("goal", Number(e.target.value))}
-                >
-                  {[10, 15, 20, 30, 45, 60].map((n) => (
-                    <option key={n} value={n}>
-                      {n} {tr(" minuti al giorno")}
-                    </option>
-                  ))}
-                </select>
-                <p className="muted">
-                  {t(
-                    "Il tempo attivo viene misurato durante lo studio, con scheda visibile. Dopo un minuto senza interazioni il conteggio si ferma. Le ore precedenti a questo aggiornamento non sono disponibili.",
-                    "Active time is tracked during study while the tab is visible. Tracking stops after a minute without interaction. Time from before this update is unavailable.",
-                  )}
-                </p>
-                <h2 className="spaced">{tr("Come funziona il corso")}</h2>
-                <p>
-                  {tr(
-                    "Il corso è organizzato in spiegazioni native, tabelle, esempi e attività interattive. Le risposte vincolate hanno verifica automatica; le risposte aperte mostrano un modello commentato con autovalutazione. I progressi precedenti restano conservati.",
-                  )}
-                </p>
-                <p>
-                  {tr(
-                    "Il pulsante di ascolto usa una voce araba installata sul dispositivo, quando disponibile. Gli script di ascolto sono testo nativo: non sono presenti registrazioni di madrelingua.",
-                  )}
-                </p>
-              </div>
-            </>
-          )}
+            )}
+            {view === "settings" && (
+              <SettingsPage data={data} put={put} loaded={loaded} importData={importData} />
+            )}
           </Suspense>
         </div>
-        <footer>
-          ARABO DA ZERO{" "}
-          <span>{tr("Il tuo percorso. Una parola alla volta.")}</span>
-          <div className="footer-links">© {new Date().getFullYear()} Gabriele Vierti · <a href="https://github.com/gabrielevierti" target="_blank" rel="noopener noreferrer">GitHub di Gabriele Vierti</a> · <a href="https://github.com/gabrielevierti/arabic-academy" target="_blank" rel="noopener noreferrer">Repository del sito</a></div>
+        <footer className="az-footer">
+          <span>
+            <strong>Arabo da Zero</strong> · gratuito e open source
+          </span>
+          <span>
+            © {new Date().getFullYear()} Gabriele Vierti ·{" "}
+            <a href="https://github.com/gabrielevierti/arabic-academy" target="_blank" rel="noopener noreferrer">
+              Codice e segnalazioni su GitHub
+            </a>
+          </span>
         </footer>
       </main>
       {modal && (
@@ -869,30 +686,17 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
             if (e.target === e.currentTarget) setModal("");
           }}
         >
-          <section
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-          >
-            <button
-              className="close"
-              aria-label={tr("Chiudi")}
-              onClick={() => setModal("")}
-            >
-              ×
+          <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button className="close az-icon-btn" aria-label="Chiudi" onClick={() => setModal("")}>
+              <Icon name="close" size={18} />
             </button>
-            <div className="eyebrow">{tr("PERSONALIZZA IL TUO CORSO")}</div>
+            <div className="az-eyebrow">Personalizza il corso</div>
             <h2 id="modal-title">
-              {modal === "card"
-                ? tr("Una nuova flashcard")
-                : modal === "lesson"
-                  ? tr("Una lezione tutta tua")
-                  : tr("Un nuovo esercizio")}
+              {modal === "card" ? "Nuova flashcard" : modal === "lesson" ? "Una lezione tutta tua" : "Nuovo esercizio"}
             </h2>
             <form onSubmit={submitForm}>
               <label>
-                {tr("Livello")}
+                Livello
                 <select name="level" defaultValue={levelOf(selected || {}) || level}>
                   {levels.map((l) => (
                     <option key={l}>{l}</option>
@@ -902,54 +706,28 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
               {modal === "lesson" ? (
                 <>
                   <label>
-                    {tr("Titolo")}
-                    <input
-                      name="title"
-                      required
-                      maxLength={200}
-                      placeholder={tr("Che cosa vuoi imparare?")}
-                    />
+                    Titolo
+                    <input name="title" required maxLength={200} placeholder="Che cosa vuoi imparare?" />
                   </label>
                   <label>
-                    {tr("Contenuto della lezione")}
-                    <textarea
-                      name="content"
-                      dir="auto"
-                      required
-                      maxLength={50000}
-                      placeholder={tr("Spiegazioni, esempi e riferimenti…")}
-                    />
+                    Contenuto della lezione
+                    <textarea name="content" dir="auto" required maxLength={50000} placeholder="Spiegazioni, esempi e riferimenti…" />
                   </label>
                 </>
               ) : (
                 <>
                   <label>
-                    {modal === "card"
-                      ? tr("Fronte · parola o domanda")
-                      : tr("Domanda")}
-                    <textarea
-                      name="front"
-                      dir="auto"
-                      required
-                      maxLength={3000}
-                    />
+                    {modal === "card" ? "Fronte · parola o domanda" : "Domanda"}
+                    <textarea name="front" dir="auto" required maxLength={3000} />
                   </label>
                   <label>
-                    {modal === "card"
-                      ? tr("Retro · significato o risposta")
-                      : tr("Risposta attesa")}
-                    <textarea
-                      name="back"
-                      dir="auto"
-                      required
-                      maxLength={3000}
-                    />
+                    {modal === "card" ? "Retro · significato o risposta" : "Risposta attesa"}
+                    <textarea name="back" dir="auto" required maxLength={3000} />
                   </label>
                 </>
               )}
-              <button className="primary full" type="submit">
-                {tr("Aggiungi al mio corso ")}
-                <Icon name="plus" />
+              <button className="az-btn az-btn-primary az-btn-block" type="submit">
+                <Icon name="plus" size={18} /> Aggiungi
               </button>
             </form>
           </section>

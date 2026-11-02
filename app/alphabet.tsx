@@ -1,5 +1,4 @@
 import AlphabetAssessment from "./alphabet-assessment";
-import Handwriting from "./handwriting";
 import { useEffect, useState } from "react";
 import { useLanguage } from "../lib/i18n";
 import { localDay } from "../lib/learning";
@@ -19,9 +18,11 @@ function shuffled<T>(xs: T[]): T[] {
 export default function Alphabet({
   data,
   put,
+  onWrite,
 }: {
   data: Record<string, any>;
   put: (k: string, v: any) => void;
+  onWrite?: (letter: string) => void;
 }) {
   const en = useLanguage() === "en",
     t = (it: string, eng: string) => (en ? eng : it);
@@ -411,7 +412,11 @@ export default function Alphabet({
             </span>
             <span>{en ? l[6] : l[5]}</span>
           </div>
-          <Handwriting key={l[0]} letter={l[0]} />
+          {onWrite && (
+            <button type="button" className="secondary write-link" onClick={() => onWrite(l[0])}>
+              Esercitati a scriverla →
+            </button>
+          )}
           <div className="letter-audio">
             <button className="secondary" onClick={() => speak(l[3])}>
               {t("◖ Nome della lettera", "◖ Letter name")}
@@ -430,7 +435,7 @@ export default function Alphabet({
           </label>
           <small className="muted">
             {t(
-              "Voce sintetica del dispositivo; non una registrazione madrelingua. I simboli indicano la pronuncia MSA, con possibili variazioni regionali.",
+              "Usa la voce araba del tuo dispositivo: è sintetica, quindi ascolta più volte e imita.",
               "Device speech synthesis, not a native-speaker recording. Symbols indicate MSA pronunciation; regional variations exist.",
             )}
           </small>

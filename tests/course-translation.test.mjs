@@ -18,6 +18,7 @@ const readable = new Set([
   "instruction",
   "model",
   "explanation",
+  "feedback",
   "rows",
   "answers",
   "tokens",
@@ -29,7 +30,11 @@ function compare(a, b, path = "", key = "") {
     if (key !== "answers") assert.equal(b.length, a.length, path);
     for (let i = 0; i < a.length; i++) compare(a[i], b[i], path + "/" + i, key);
   } else if (a && typeof a === "object") {
+    // tables rebuilt by hand in Italian (scripts/content-fixes) are not in the archive
+    if (a.revised) return;
     for (const k of Object.keys(a)) {
+      // per-question feedback is derived from the explanation, compared above
+      if (k === "feedback") continue;
       if (k === "answers" && a.mode === "choice") {
         assert.deepEqual(a[k], b[k], path);
         continue;

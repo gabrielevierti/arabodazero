@@ -63,8 +63,8 @@ test("C1 Arabic text is decoded and directional isolates are balanced", () => {
   for (const r of course.books.find((b) => b.id === "C1").resources) {
     const text = readFileSync(`public/course/${r.id}.json`, "utf8");
     assert(!text.includes("�"), r.id);
-    const opens = (text.match(/⁧/g) || []).length,
-      closes = (text.match(/⁩/g) || []).length;
+    const opens = (text.match(/\u2067/g) || []).length,
+      closes = (text.match(/\u2069/g) || []).length;
     assert.equal(opens, closes, r.id);
     // presentation forms or dotless skeletons mean a glyph was not recognised
     // (ornate Quranic parentheses ﴾﴿ and ﷺ are genuine characters)
@@ -72,5 +72,38 @@ test("C1 Arabic text is decoded and directional isolates are balanced", () => {
       !/[ﭐ-ﴽ﵀-ﷱﷳ-ﷹﹰ-ﻼٮٯڡں]/.test(text),
       r.id,
     );
+  }
+});
+test("PDF conversion repairs are applied and paradigm tables have one form per cell", async () => {
+  const { spawnSync } = await import("node:child_process");
+  const { readdirSync } = await import("node:fs");
+  const r = spawnSync(process.execPath, ["scripts/repair-pdf-artifacts.mjs", "--check"], { encoding: "utf8" });
+  assert.equal(r.status, 0, "run: node scripts/repair-pdf-artifacts.mjs\n" + r.stdout);
+  const strip = (s) => String(s).replace(/[\u2066-\u2069\u200E\u200F]/g, "").trim();
+  for (const name of readdirSync("public/course").filter((n) => n.endsWith(".json"))) {
+    const d = read(`public/course/${name}`);
+    const blocks = [
+      ...(d.blocks || []),
+      ...(d.chapters || []).flatMap((c) => c.blocks || []),
+    ];
+    for (const b of blocks) {
+      if (b.type !== "table") continue;
+      const head = b.rows[0].map(strip);
+      if (["Persona", "Pronome", "Errore"].includes(head[0]))
+        for (const cell of b.rows.flat()) {
+          // no words glued together by the PDF conversion
+          for (const w of strip(cell).match(/[\u0621-\u064A][\u0621-\u064A\u064B-\u0652\u0670]*/gu) || []) {
+            const bare = w.replace(/[\u064B-\u0652\u0670]/gu, "");
+            assert(bare.length < 13, `${name}: «${strip(cell)}»`);
+          }
+        }
+      if (head[0] !== "Persona" || !head.some((h) => /Perfetto|Indicativo/.test(h))) continue;
+      for (const row of b.rows.slice(1))
+        for (const cell of row.slice(1)) {
+          const forms = strip(cell).split(" · ");
+          for (const f of forms)
+            assert(f.split(/\s+/).length <= 3, `${name}: «${strip(cell)}»`);
+        }
+    }
   }
 });

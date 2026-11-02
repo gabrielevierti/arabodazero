@@ -349,7 +349,7 @@ export function ErrorReview({
       </div>
       <p>
         {t(
-          "Gli errori entrano qui automaticamente. Dopo una risposta corretta tornano a intervalli adattivi SM-2; se sbagli, riparti da oggi.",
+          "Ogni risposta sbagliata o «quasi» arriva qui da sola. Quando la ripassi bene torna dopo qualche giorno, poi dopo settimane; se sbagli, la rivedi oggi.",
           "Mistakes appear here automatically. After a correct answer, they return in adaptive SM-2 intervals; after a mistake, they are due again today.",
         )}
       </p>

@@ -189,6 +189,16 @@ for (const lang of ["it", "en"]) {
         issue("warning", "terminology", filename, p, s.slice(0, 220));
       if (/\ufffd/.test(s))
         issue("error", "unicode", filename, p, "Replacement character");
+      // Words glued by the PDF conversion that scripts/repair-pdf-artifacts.mjs
+      // could not split safely: a tāʾ marbūṭa or alif maqṣūra inside a word,
+      // or an implausibly long word. Listed for review against the volumes.
+      if (lang === "it")
+        for (const m of s.matchAll(/[\u0621-\u064A][\u0621-\u064A\u064B-\u0652\u0670]*/gu)) {
+          const bare = m[0].replace(/[\u064B-\u0652\u0670]/gu, "");
+          const inside = /[\u0629\u0649](?!(?:ه|ها|هما|هم|هن|ك|كما|كم|كن|ي|نا)$)[\u0621-\u064A]/u.test(bare);
+          if (inside || bare.length >= 13)
+            issue("warning", "glued-arabic", filename, p, m[0]);
+        }
     });
     // English is an archive of A0–B2 only: the product is Italian-only.
     if (lang === "it" && ENGLISH_ARCHIVE.some((level) => file.startsWith(level + "-"))) {

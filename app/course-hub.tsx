@@ -1,15 +1,70 @@
-import {errorQueue,localDay} from '../lib/learning';
-import metadata from '../data/study-metadata.json';
-type Lesson={id:string;title:string;level:string;code:string;custom?:boolean};
-export default function CourseHub({data,lessons,current,loaded,onResume,onStudy,onPractice,onReview}:{data:Record<string,any>;lessons:Lesson[];current:Lesson;loaded:boolean;onResume:()=>void;onStudy:()=>void;onPractice:()=>void;onReview:()=>void}){
- const core=lessons.filter(l=>(metadata as Record<string,{core:boolean}>)[l.id]?.core);
- const complete=core.filter(l=>data['progress:'+l.id]?.done).length,percent=core.length?Math.round(100*complete/core.length):0;
- const errors=errorQueue(data).length,answers=Object.entries(data).filter(([k,v])=>k.startsWith('answer:native:')&&['good','again','partial'].includes(v?.rating));
- const minutes=Math.floor((data['study:'+localDay()]?.seconds||0)/60),goal=data.goal||15;
- return <section className="course-hub"><div className="heading"><div><div className="eyebrow">DALL’ITALIANO ALL’ARABO · UN PASSO ALLA VOLTA</div><h1>Il tuo corso di arabo.</h1><p>Le basi per capire, leggere e comunicare in situazioni concrete, anche sul lavoro.</p></div></div>
- <div className="course-hub-grid"><section className="course-resume"><span className="eyebrow">RIPARTI DA QUI · {current.level}</span><h2>{current.title}</h2><p>Riprendi la lezione dal punto in cui eri rimasto, oppure dedica allo studio una sessione guidata.</p><div className="row"><button className="primary light" disabled={!loaded} onClick={onResume}>Riprendi il corso →</button><button className="secondary" disabled={!loaded} onClick={onStudy}>Studia {goal} minuti</button></div><small>Oggi: {minutes} di {goal} minuti di studio attivo</small></section>
- <section className="panel course-overall"><span className="eyebrow">PROGRESSO GENERALE · A0–C1</span><strong>{loaded?`${percent}%`:'…'}</strong><progress aria-label="Lezioni principali completate" value={complete} max={Math.max(1,core.length)}/><p>{complete} di {core.length} lezioni principali completate</p><small>Avanzamento nei contenuti, non una misura del livello linguistico. Include le lezioni già segnate complete.</small></section></div>
- <div className="course-actions"><button className="panel" disabled={!loaded} onClick={onPractice}><span className="eyebrow">METTI IN PRATICA</span><h2>Esercizi</h2><p>Allena lettura, lessico e grammatica con le attività del corso.</p><b>{answers.length} risposte registrate · Vai agli esercizi →</b></button><button className="panel" disabled={!loaded} onClick={onReview}><span className="eyebrow">IMPARA DALLE CORREZIONI</span><h2>Ripasso e correzioni</h2><p>Rivedi gli errori, confronta le risposte con le soluzioni e ripassa le parole.</p><b>{errors?`${errors} domande da ripassare oggi`:'Nessun errore in scadenza oggi'} →</b></button></div>
- <p className="course-purpose">Arabo standard moderno, spiegato in italiano. L’obiettivo è un uso pratico e lavorativo della lingua: il percorso va dall’alfabeto al livello C1 «Competenza professionale» e non costituisce una qualifica professionale.</p>
- </section>
+import metadata from "../data/study-metadata.json";
+import { levelOf } from "../lib/levels";
+import { Icon } from "./icons";
+
+type Lesson = { id: string; title: string; level: string; code: string; custom?: boolean };
+
+/** Head of the course page: where you are and the one button that matters. */
+export default function CourseHub({
+  data,
+  lessons,
+  current,
+  loaded,
+  onResume,
+  onStudy,
+}: {
+  data: Record<string, any>;
+  lessons: Lesson[];
+  current: Lesson;
+  loaded: boolean;
+  onResume: () => void;
+  onStudy: () => void;
+}) {
+  const core = lessons.filter((l) => (metadata as Record<string, { core?: boolean }>)[l.id]?.core);
+  const complete = core.filter((l) => data["progress:" + l.id]?.done).length;
+  const percent = core.length ? Math.round((complete / core.length) * 100) : 0;
+  return (
+    <section className="az-course-head">
+      <header className="az-page-head">
+        <div className="az-eyebrow">Il corso · dall'alfabeto al C1</div>
+        <h1>Arabo standard moderno, spiegato in italiano.</h1>
+        <p>
+          Sei volumi, una lezione alla volta. Le lezioni principali seguono un ordine; le tracce
+          complementari (egiziano, darija, approfondimenti) si aggiungono quando vuoi.
+        </p>
+      </header>
+      <div className="az-course-strip">
+        <div className="az-course-next">
+          <span className="az-level-pill az-level-pill-soft">{levelOf(current)}</span>
+          <div>
+            <small>Prossimo passo</small>
+            <strong>{current.title}</strong>
+          </div>
+          <button type="button" className="az-btn az-btn-primary" disabled={!loaded} onClick={onResume}>
+            Continua <Icon name="arrow" size={18} />
+          </button>
+        </div>
+        <div className="az-course-total">
+          <strong>{percent}%</strong>
+          <div>
+            <i
+              role="progressbar"
+              aria-label="Lezioni principali completate"
+              aria-valuemin={0}
+              aria-valuemax={core.length}
+              aria-valuenow={complete}
+            >
+              <b style={{ width: percent + "%" }} />
+            </i>
+            <small>
+              {complete} di {core.length} lezioni principali
+            </small>
+          </div>
+          <button type="button" className="az-btn az-btn-outline" disabled={!loaded} onClick={onStudy}>
+            <Icon name="play" size={16} /> Sessione guidata · {data.goal || 15} min
+          </button>
+        </div>
+      </div>
+    </section>
+  );
 }

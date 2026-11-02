@@ -97,7 +97,7 @@ export default function Progress({
             <small>min</small>
           </strong>
           <p>
-            {t("Misurato da questo aggiornamento", "Tracked since this update")}
+            {t("Studio attivo, pagina in primo piano", "Active study time")}
           </p>
         </div>
         <div className="panel">
@@ -175,30 +175,22 @@ export default function Progress({
         )}
       </section>
       <section className="panel spaced">
-        <h2>
-          {t("Evidenze, non certificazioni", "Evidence, not certificates")}
-        </h2>
+        <h2>{t("Come stai andando", "How you are doing")}</h2>
         <p>
           {t(
-            "Le spunte delle lezioni, incluse quelle storiche, indicano contenuto completato. Le autovalutazioni non sono prove indipendenti.",
-            "Lesson checkmarks, including legacy records, indicate completed content. Self-assessment is not independent evidence.",
+            "Le lezioni completate dicono quanto hai studiato; le verifiche dicono quanto hai fissato.",
+            "Completed lessons show how much you studied; checks show what stuck.",
           )}
         </p>
         <p>
           {t("Riconoscimento forme A0", "A0 form recognition")}:{" "}
           {data["assessment:A0-letter-forms"]
             ? `${data["assessment:A0-letter-forms"].score}/5`
-            : t("Non ancora valutato", "Not yet assessed")}
+            : t("da fare, nella pagina Alfabeto", "not taken yet")}
         </p>
         <p>
           {t(
-            "Lettura estesa, ascolto, scrittura, grammatica, lessico e produzione orale: non ancora valutati con prove indipendenti.",
-            "Extended reading, listening, writing, grammar, vocabulary and speaking: not yet independently assessed.",
-          )}
-        </p>
-        <p>
-          {t(
-            "Accuratezza al primo tentativo registrato",
+            "Risposte giuste al primo tentativo",
             "Accuracy on first recorded attempt",
           )}
           :{" "}
@@ -221,13 +213,13 @@ export default function Progress({
         </summary>
         <p>
           {t(
-            "Le ore previste provengono dalle schede delle lezioni principali e includono studio e pratica. Il residuo diminuisce per metà con i passaggi letti e per metà con le risposte corrette o autovalutate; una lezione segnata completa azzera il suo residuo. Le tracce complementari sono escluse. È una guida di pianificazione, non una previsione di competenza o una certificazione.",
+            "Le ore previste vengono dalle schede delle lezioni principali (studio più pratica). Scendono per metà con i passaggi letti e per metà con gli esercizi svolti; una lezione completata non conta più. Le tracce complementari non sono incluse. È un aiuto per organizzarti, non un voto.",
             "Expected hours come from core lesson plans and include study and practice. Half of the remaining estimate decreases with reading steps, half with correct or self-assessed answers; a lesson marked complete has no remaining hours. Supplementary tracks are excluded. This is a planning guide, not a proficiency forecast or certification.",
           )}
         </p>
         <p>
           {t(
-            "Il tempo attivo conta solo durante lezioni, alfabeto e sessioni, con scheda visibile e interazioni nell’ultimo minuto. Il tempo precedente a questo aggiornamento non è ricostruito.",
+            "Il tempo attivo conta durante lezioni, ripasso, alfabeto, scrittura e sessioni, con la pagina in primo piano; si ferma dopo un minuto senza interazioni.",
             "Active time is counted only in lessons, the alphabet and sessions, while the tab is visible and there has been interaction within the last minute. Earlier study time cannot be reconstructed.",
           )}
         </p>

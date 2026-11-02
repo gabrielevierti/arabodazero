@@ -1,10 +1,10 @@
 import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import fs from 'node:fs';
-for(const route of ['course','alphabet','practice','review','progress','library','settings','lesson/A0-L0-01','lesson/C1-C1-04'])test('dark mobile '+route,async({page})=>{
+for(const route of ['home','course','writing','alphabet','practice','review','progress','library','settings','lesson/A0-L0-01','lesson/C1-C1-04'])test('dark mobile '+route,async({page})=>{
  await page.emulateMedia({colorScheme:'dark'});
  await page.setViewportSize({width:375,height:812});
- await page.goto('/#/'+route);
+ await page.goto('/#/'+(route==='home'?'':route));
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
  if(route==='alphabet')await expect(page.locator('.alphabet-grid')).toBeVisible();
  if(route==='library')await expect(page.locator('.volume-shelf')).toBeVisible();

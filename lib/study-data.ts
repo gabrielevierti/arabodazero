@@ -31,6 +31,17 @@ export function validRecord(key: string, v: any): boolean {
     );
   if (key.startsWith("study:"))
     return date(key.slice(6)) && obj() && integer(v.seconds, 86400);
+  if (key === "onboarding")
+    return obj() && ["zero", "reader", "explore"].includes(v.start) && str(v.at, 40);
+  if (key.startsWith("writing:"))
+    return (
+      /^[\u0621-\u064A]$/u.test(key.slice(8)) &&
+      obj() &&
+      typeof v.completed === "boolean" &&
+      integer(v.attempts, 100000) &&
+      ["trace", "copy", "memory"].includes(v.lastMode) &&
+      str(v.updatedAt, 40)
+    );
   if (key.startsWith("alphabet:"))
     return (
       /^[ابتثجحخدذرزسشصضطظعغفقكلمنهوي]$/.test(key.slice(9)) &&

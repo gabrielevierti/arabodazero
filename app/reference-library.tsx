@@ -101,7 +101,7 @@ export default function ReferenceLibrary({
       </label>
       <p className="muted">
         {t(
-          "Estratto dal corso, senza analisi morfologica automatica. La provenienza non equivale a revisione linguistica indipendente. Primi 60 risultati.",
+          "Risultati dal testo e dal lessico del corso (primi 60).",
           "Extracted from the course, with no automatic morphological analysis. Provenance is not independent linguistic review. First 60 results.",
         )}
       </p>

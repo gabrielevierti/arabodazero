@@ -5,9 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import SpeakingPractice from "./speaking-practice";
 import { playArabic } from "../lib/audio";
 import ContextualVocabulary from "./contextual-vocabulary";
-import { evaluateAnswer, withAttempt } from "../lib/grading";
+import { gradeAnswer, withAttempt } from "../lib/grading";
 import { loadCourse } from "../lib/course-loader";
+import { Icon } from "./icons";
 type Any = Record<string, any>;
+/** Compares two texts without isolates, vowels and spacing. */
+const stripMarks = (s = "") =>
+  s.replace(/[\u2066-\u2069\u200e\u200f\u064b-\u0652\u0670\s.,;:]/gu, "");
 /** True for text written only in Arabic (punctuation and digits allowed). */
 const arabicOnly = (s?: string) =>
   !!s && /[\u0621-\u064a]/.test(s) && !/[A-Za-z\u00c0-\u024f\u1e00-\u1eff]/.test(s);
@@ -207,6 +211,7 @@ export default function NativeCourse({
     [complete, setComplete] = useState(false),
     [showContext, setShowContext] = useState(false),
     [showFull, setShowFull] = useState(false),
+    [outlineOpen, setOutlineOpen] = useState(false),
     [order, setOrder] = useState<number[]>([]),
     [audioNotice, setAudioNotice] = useState("");
   const targetApplied = useRef("");
@@ -316,7 +321,11 @@ export default function NativeCourse({
   function submit(choice?: string) {
     if (!question || isChecked || gradingLock.current === answerKey) return;
     const text = choice ?? answer.text ?? "";
-    const rating = evaluateAnswer(question, text);
+    const { rating, note } = gradeAnswer(
+      question,
+      text,
+      (exercise.instruction || "") + " " + (exercise.title || ""),
+    );
     if (rating === "empty") return;
     gradingLock.current = answerKey;
     const automatic = rating !== "model";
@@ -324,6 +333,7 @@ export default function NativeCourse({
       ...answer,
       text,
       rating,
+      note: note || "",
       automatic,
       expected: question.answers?.[0] || "",
       attempts: (data[answerKey]?.attempts || 0) + 1,
@@ -401,16 +411,13 @@ export default function NativeCourse({
       <div className="heading lesson-heading">
         <div>
           <div className="eyebrow">
-            {lesson.level} · {lesson.code} {tr(" · IL TUO CORSO INTERATTIVO")}
+            {lesson.level} · {lesson.code}
           </div>
           <h1>{native.title}</h1>
         </div>
         <span className="mastery-pill">
-          {correct}{" "}
-          {language === "en"
-            ? "correct / self-confirmed · "
-            : "corrette / autoconfermate · "}
-          {answered}/{all.length} {tr(" svolte")}
+          {answered} di {all.length} esercizi svolti
+          {answered > 0 ? ` · ${correct} corretti` : ""}
         </span>
       </div>
       <div className="native-tabs">
@@ -431,19 +438,32 @@ export default function NativeCourse({
           className={tab === "notes" ? "selected" : ""}
           onClick={() => setTab("notes")}
         >
-          03 <span>{tr("I tuoi appunti")}</span>
+          03 <span>{tr("Appunti")}</span>
         </button>
       </div>
       {tab === "learn" && (
         <div className="native-study-grid">
-          <aside className="native-outline">
-            <div className="eyebrow">{tr("PICCOLI PASSI, SOLIDE BASI")}</div>
+          <button
+            type="button"
+            className="outline-toggle"
+            aria-expanded={outlineOpen}
+            aria-controls="lesson-outline"
+            onClick={() => setOutlineOpen(!outlineOpen)}
+          >
+            <span>
+              Passaggio {chapter + 1} di {native.chapters.length}
+            </span>
+            <span aria-hidden="true">{outlineOpen ? "▴" : "▾"}</span>
+          </button>
+          <aside className={"native-outline" + (outlineOpen ? " open" : "")} id="lesson-outline">
+            <div className="eyebrow">Passaggi</div>
             {native.chapters.map((c: any, i: number) => (
               <button
                 key={i}
                 className={chapter === i ? "selected" : ""}
                 onClick={() => {
                   setChapter(i);
+                  setOutlineOpen(false);
                   recordProgress({ step: i });
                 }}
               >
@@ -452,7 +472,9 @@ export default function NativeCourse({
                     ? "✓"
                     : String(i + 1).padStart(2, "0")}
                 </span>
-                <Rich text={c.title} />
+                <span className="outline-title">
+                  <Rich text={c.title} />
+                </span>
               </button>
             ))}
           </aside>
@@ -575,7 +597,9 @@ export default function NativeCourse({
                     {
                       rawItems.filter(
                         (q: any) =>
-                          data[keyFor(q, exercise.id)]?.rating === "again",
+                          ["again", "partial"].includes(
+                            data[keyFor(q, exercise.id)]?.rating,
+                          ),
                       ).length
                     }
                   </strong>
@@ -688,7 +712,8 @@ export default function NativeCourse({
                     className="listen-button"
                     onClick={() => speak(question.prompt)}
                   >
-                    {tr("◖ Ascolta con la voce del dispositivo")}
+                    <Icon name="sound" size={16} />
+                    {tr("Ascolta con la voce del dispositivo")}
                   </button>
                 )}
                 {audioNotice && (
@@ -712,9 +737,11 @@ export default function NativeCourse({
                       >
                         <span>{String.fromCharCode(65 + i)}</span>
                         <Rich text={o.text} />
-                        {isChecked && question.answers.includes(o.id) && (
-                          <b>✓</b>
-                        )}
+                        {isChecked && question.answers.includes(o.id) ? (
+                          <b className="choice-mark ok" aria-label="risposta giusta">✓</b>
+                        ) : isChecked && answer.text === o.id ? (
+                          <b className="choice-mark no" aria-label="la tua risposta">✗</b>
+                        ) : null}
                       </button>
                     ))}
                   </div>
@@ -788,7 +815,7 @@ export default function NativeCourse({
                       <details className="keyboard-details">
                         <summary>{tr("Tastiera araba")}</summary>
                         <div className="arabic-keys" dir="rtl">
-                          {"ا ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي ء ة ى أ إ آ ئ ؤ َ ِ ُ ْ ّ ً ٍ ٌ"
+                          {"ا ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي ء ة ى أ إ آ ئ ؤ \u064E \u0650 \u064F \u0652 \u0651 \u064B \u064D \u064C"
                             .split(" ")
                             .map((a, i) => (
                               <button key={i} onClick={() => appendLetter(a)}>
@@ -837,7 +864,7 @@ export default function NativeCourse({
                       "feedback " +
                       (answer.rating === "good"
                         ? "success"
-                        : answer.rating === "again"
+                        : answer.rating === "again" || answer.rating === "partial"
                           ? "retry"
                           : "model")
                     }
@@ -845,16 +872,20 @@ export default function NativeCourse({
                   >
                     <div className="feedback-title">
                       {answer.rating === "good"
-                        ? tr("✓ Ben fatto.")
-                        : answer.rating === "again"
-                          ? tr("Ci sei quasi: confrontiamo.")
-                          : tr("Confronta il tuo ragionamento.")}
+                        ? answer.overridden
+                          ? "✓ Segnata come corretta da te."
+                          : "✓ Corretto."
+                        : answer.rating === "partial"
+                          ? "Quasi."
+                          : answer.rating === "again"
+                            ? "Non ancora: confronta con la soluzione."
+                            : "Confronta con il modello."}
                     </div>
+                    {answer.note && <p className="grade-note">{answer.note}</p>}
                     {question.mode === "open" && (
                       <p>
-                        {tr(
-                          "Questa risposta richiede valutazione del contenuto. Usa il modello per controllare significato e forma.",
-                        )}
+                        Qui non c'è una sola risposta giusta: confronta la tua
+                        con il modello e decidi tu.
                       </p>
                     )}
                     {question.model ? (
@@ -878,6 +909,16 @@ export default function NativeCourse({
                             }
                           />
                         </div>
+                        {question.feedback &&
+                          stripMarks(question.feedback) !==
+                            stripMarks(question.answers?.[0] || question.model) && (
+                            <div className="item-feedback">
+                              <span className="feedback-label">PERCHÉ</span>
+                              <p>
+                                <Rich text={question.feedback} />
+                              </p>
+                            </div>
+                          )}
                       </>
                     ) : exercise.solutionBlocks?.length ? (
                       <>
@@ -975,13 +1016,31 @@ export default function NativeCourse({
                         </button>
                       </div>
                     )}
-                    {question.mode !== "open" && answer.rating === "again" && (
-                      <small>
-                        {tr(
-                          "Il controllo automatico confronta le forme previste. Una variante non presente nel modello può richiedere una verifica personale.",
-                        )}
-                      </small>
-                    )}
+                    {question.mode !== "open" &&
+                      question.mode !== "choice" &&
+                      ["again", "partial"].includes(answer.rating) && (
+                        <div className="override">
+                          <small>
+                            Hai scritto una forma equivalente che il controllo
+                            non conosce?
+                          </small>
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() =>
+                              saveAnswer(answerKey, {
+                                ...answer,
+                                rating: "good",
+                                automatic: false,
+                                overridden: true,
+                                note: "",
+                              })
+                            }
+                          >
+                            La mia risposta è corretta
+                          </button>
+                        </div>
+                      )}
                     <button className="context-link" onClick={onFlashcard}>
                       {tr("+ Trasforma questo punto in una flashcard")}
                     </button>

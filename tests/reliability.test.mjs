@@ -84,8 +84,9 @@ test("backups v1 and v2 preserve unknown values, validate nested data and reject
 test("normalization preserves meaningful Arabic distinctions and respects explicit policies", () => {
   const q = { mode: "input", answers: ["أَب"], strictMarks: true };
   assert.equal(grade.evaluateAnswer(q, "أَب"), "good");
-  assert.equal(grade.evaluateAnswer(q, "اب"), "again");
-  assert.equal(grade.evaluateAnswer(q, "أب"), "again");
+  // strict exercises: right letters without the required vowels is «quasi», not correct
+  assert.equal(grade.evaluateAnswer(q, "اب"), "partial");
+  assert.equal(grade.evaluateAnswer(q, "أب"), "partial");
   assert.equal(
     grade.evaluateAnswer({ ...q, normalization: "arabic-unvocalized" }, "أب"),
     "good",
@@ -221,4 +222,31 @@ test("all micro lessons have real source chapters, questions and acyclic prerequ
       ),
     );
   }
+});
+
+test("grading accepts what a teacher accepts and explains the rest", () => {
+  const q = (answers, extra = {}) => ({ mode: "input", answers, ...extra });
+  const r = (question, text, instruction) =>
+    grade.gradeAnswer(question, text, instruction);
+  // the dagger alif is not on ordinary keyboards
+  assert.equal(r(q(["\u0647\u0670\u0630\u064e\u0627"]), "\u0647\u064e\u0630\u064e\u0627").rating, "good");
+  assert.equal(r(q(["\u0647\u0670\u0630\u064e\u0627"]), "\u0647\u0630\u0627").rating, "good");
+  // short vowels are optional unless the exercise asks for them
+  const city = q(["مَدِينَةٌ قَدِيمَةٌ"]);
+  assert.equal(r(city, "مدينة قديمة").rating, "good");
+  assert.equal(r(city, "مدينة قديمة", "Scrivi con tutte le vocali.").rating, "partial");
+  // a written vowel that contradicts the model is not accepted
+  assert.equal(r(q(["أَنْتِ"]), "أنتَ").rating, "partial");
+  // tāʾ marbūṭa written as hāʾ, missing hamza: «quasi», with a reason
+  const almost = r(city, "مدينه قديمه");
+  assert.equal(almost.rating, "partial");
+  assert.match(almost.note, /tāʾ marbūṭa/);
+  // final punctuation never decides
+  assert.equal(r(q(["فِي المَدِينَةِ مَتْحَفٌ"]), "في المدينة متحف.").rating, "good");
+  // a different full sentence is compared with the model, not marked wrong
+  assert.equal(r(q(["فِي المَدِينَةِ مَتْحَفٌ حَدِيثٌ"]), "هناك متحف حديث في المدينة").rating, "model");
+  assert.equal(r(q(["هٰذِهِ"]), "هذا").rating, "again");
+  // transliteration: the macron is the point of the exercise
+  assert.equal(r(q(["banāt"]), "banat").rating, "partial");
+  assert.equal(r(q(["bint"]), "Bint").rating, "good");
 });

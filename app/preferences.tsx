@@ -7,6 +7,8 @@ export function applyPreferences(p: Record<string, any>) {
   );
   const root=document.documentElement;
   root.dataset.theme=p.theme==='dark'||(p.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
+  // keep the phone's browser bar in the same colour as the page
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m)=>m.setAttribute('content',root.dataset.theme==='dark'?'#0c1312':'#f6f4ef'));
   root.style.setProperty('--reading-size', (p.readingSize||16)+'px');
   root.style.setProperty('--reading-leading',String(p.readingLeading||1.8));
   root.dataset.width=p.readingWidth||'comfortable';

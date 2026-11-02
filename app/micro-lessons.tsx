@@ -39,7 +39,7 @@ export default function MicroLessons({
         <h1>{t("Micro-lezioni A0", "A0 micro-lessons")}</h1>
         <p>
           {t(
-            "Cinque unità tematiche pilota, collegate al testo originale. Completamento della pratica, non certificazione di padronanza.",
+            "Cinque unità tematiche brevi, collegate al testo del corso.",
             "Five topic-based pilot units linked to the original text. Practice completion, not certification of mastery.",
           )}
         </p>
@@ -131,7 +131,7 @@ export default function MicroLessons({
           <h2>{t("Unità completata", "Unit completed")}</h2>
           <p>
             {t(
-              "Hai letto e svolto le attività. Le risposte da rivedere sono nel ripasso; questa conclusione non equivale a padronanza verificata.",
+              "Hai letto e svolto le attività. Le risposte da rivedere ti aspettano nel ripasso.",
               "You read and practised. Mistakes are available in review; this completion does not mean verified mastery.",
             )}
           </p>
