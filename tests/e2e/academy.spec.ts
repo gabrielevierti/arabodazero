@@ -1,0 +1,433 @@
+import fs from "node:fs";
+import { test, expect } from "@playwright/test";
+test("course exercise error, retry and language-independent deep link", async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("arabic-academy:language:./", "en"));
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/#/lesson/A0-L0-01");
+  await expect(
+    page.getByRole("heading", {
+      name: "Il sistema di scrittura e la famiglia del «dente»",
+    }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /02 Allenati/ }).click();
+  await page.locator(".choice-options button").first().click();
+  await expect(page.locator(".feedback")).toBeVisible();
+  await page.getByRole("button", { name: "Riprova", exact: true }).click();
+  await page.locator(".choice-options button").nth(1).click();
+  await expect(page.locator(".feedback")).toHaveClass(/success/);
+  await expect(page.getByRole("button", { name: "EN English" })).toHaveCount(0);
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
+  await expect(page).toHaveURL(/lesson\/A0-L0-01/);
+  await page.reload();
+  await expect(page.locator(".native-course")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+test("v1 backup preview, atomic merge, v2 export and preserved unknown record", async ({
+  page,
+}) => {
+  await page.goto("/#/settings");
+  await page.locator("input[type=file]").setInputFiles({
+    name: "legacy.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(
+      JSON.stringify({
+        format: "arabic-academy",
+        version: 1,
+        data: {
+          goal: 20,
+          "note:test": "preserved",
+          "legacy:compatible": { x: 1 },
+        },
+      }),
+    ),
+  });
+  await expect(
+    page.getByRole("heading", { name: "Anteprima importazione" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Conferma importazione" }).click();
+  await expect(
+    page.getByText("Importazione completata e salvata."),
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Minuti di studio attivo al giorno", { exact: true }),
+  ).toHaveValue("20");
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Esporta backup JSON" }).click();
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const c of stream!) chunks.push(c);
+  const backup = JSON.parse(Buffer.concat(chunks).toString());
+  expect(backup.version).toBe(2);
+  expect(backup.data["legacy:compatible"]).toEqual({ x: 1 });
+  await page.reload();
+  await expect(
+    page.getByLabel("Minuti di studio attivo al giorno", { exact: true }),
+  ).toHaveValue("20");
+});
+for (const width of [320, 375, 390, 768, 1024, 1440])
+  test(`responsive navigation and alphabet at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/#/");
+    await expect(
+      page.getByRole("heading", { level: 1, name: /^Buon(giorno| pomeriggio|asera|anotte)\.$/ }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    if (width === 1440) {
+      fs.mkdirSync("reports/screenshots", { recursive: true });
+      await page.screenshot({
+        path: "reports/screenshots/dashboard-desktop.png",
+      });
+    }
+    await page.goto("/#/alphabet");
+    await expect(
+      page.getByRole("heading", { name: "28 lettere. Un nuovo mondo." }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    if (width === 390) {
+      fs.mkdirSync("reports/screenshots", { recursive: true });
+      await page.screenshot({
+        path: "reports/screenshots/alphabet-mobile.png",
+      });
+    }
+    if (width <= 900) {
+      await page
+        .locator(".az-tabbar")
+        .getByRole("button", { name: /Altro/ })
+        .click();
+      await expect(
+        page
+          .locator("#az-more-sheet")
+          .getByRole("button", { name: "Impostazioni" }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.locator("#az-more-sheet")).toHaveCount(0);
+    } else {
+      await expect(page.locator(".az-sidebar")).toBeVisible();
+      await expect(page.locator(".az-tabbar")).toBeHidden();
+    }
+  });
+test("keyboard modal dismissal restores focus", async ({ page }) => {
+  await page.goto("/#/review");
+  await page
+    .getByRole("button", { name: "Nuova flashcard", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Nuova flashcard", exact: true }),
+  ).toBeFocused();
+});
+test("unavailable content has retry navigation", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  const page = await context.newPage();
+  await page.route("**/course/A0-L0-01.json", (r) => r.abort());
+  await page.goto(
+    (process.env.TEST_BASE_URL || "http://127.0.0.1:4174") +
+      "/#/lesson/A0-L0-01",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Impossibile caricare la lezione" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Torna al percorso", exact: true }),
+  ).toBeVisible();
+  await context.close();
+});
+test("restricted storage does not pretend to save progress", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "indexedDB", {
+      value: {
+        open() {
+          throw new DOMException("Storage blocked", "SecurityError");
+        },
+      },
+    });
+  });
+  await page.goto("/");
+  await expect(page.getByRole("alert")).toContainText("Storage blocked");
+  await expect(
+    page.getByRole("alert"),
+  ).toBeVisible();
+});
+test("mistake review persists correction and schedules tomorrow", async ({
+  page,
+}) => {
+  await page.goto("/#/lesson/A0-L0-01");
+  await page.getByRole("button", { name: /02 Allenati/ }).click();
+  await page.locator(".choice-options button").first().click();
+  await page
+    .locator(".az-sidebar")
+    .getByRole("button", { name: /^Ripasso/ })
+    .click();
+  await page
+    .getByRole("button", {
+      name: /Ripassa.*error|Riprendi.*error|Ripassa ora/i,
+    })
+    .click();
+  await page.locator(".choice-options button").nth(1).click();
+  await page.getByRole("button", { name: "Continua →", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Un altro passo avanti." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Torna al corso" }).click();
+  await page.goto("/#/settings");
+  const dl = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Esporta backup JSON" }).click();
+  const stream = await (await dl).createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const c of stream!) chunks.push(c);
+  const data = JSON.parse(Buffer.concat(chunks).toString()).data;
+  const key = "answer:native:A0-L0-01:starter:1";
+  expect(data[key].rating).toBe("good");
+  expect(data[key].attempts).toBe(2);
+  expect(data[key].history).toHaveLength(2);
+  expect(data["review:" + key].interval).toBe(1);
+});
+
+test("offline shell and cached lesson survive reload", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/#/lesson/A0-L0-01");
+  await expect(page.locator(".native-course")).toBeVisible();
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  await expect
+    .poll(() => page.evaluate(() => !!navigator.serviceWorker.controller))
+    .toBe(true);
+  await page.reload();
+  await expect(page.locator(".native-course")).toBeVisible();
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator(".native-course")).toBeVisible();
+  await expect(page.getByText(/Sei offline/)).toBeVisible();
+});
+test("first-load JavaScript budget and selected language only", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { level: 1, name: /^Buon(giorno| pomeriggio|asera|anotte)\.$/ }),
+  ).toBeVisible();
+  const resources = await page.evaluate(() =>
+    performance.getEntriesByType("resource").map((e) => ({
+      name: e.name,
+      size: (e as PerformanceResourceTiming).decodedBodySize,
+    })),
+  );
+  expect(resources.some((r) => r.name.includes("course.en-"))).toBe(false);
+  const js = resources.filter(
+    (r) => r.name.includes("/assets/") && r.name.endsWith(".js"),
+  );
+  // The bundled course index carries only what the interface reads.
+  expect(js.reduce((n, r) => n + r.size, 0)).toBeLessThan(450000);
+});
+test("quota failures remain visible and pending data is exportable", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args: Parameters<typeof put>) {
+      if (this.name === "records")
+        throw new DOMException("Storage full", "QuotaExceededError");
+      return put.apply(this, args);
+    };
+  });
+  await page.goto("/#/settings");
+  await page.getByLabel("Minuti di studio attivo al giorno", { exact: true }).selectOption("30");
+  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Esporta backup JSON" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Riprova il salvataggio" }),
+  ).toBeVisible();
+});
+test("committed settings propagate across tabs", async ({ page, context }) => {
+  await page.goto("/#/settings");
+  const other = await context.newPage();
+  await other.goto("/#/settings");
+  await expect(
+    other.getByLabel("Minuti di studio attivo al giorno", { exact: true }),
+  ).toHaveValue("15");
+  await page.getByLabel("Minuti di studio attivo al giorno", { exact: true }).selectOption("45");
+  await expect(
+    other.getByLabel("Minuti di studio attivo al giorno", { exact: true }),
+  ).toHaveValue("45");
+});
+test("daily goal controls session and a short block extends without resetting timer", async ({
+  page,
+}) => {
+  await page.goto("/#/settings");
+  await page.getByLabel("Minuti di studio attivo al giorno", { exact: true }).selectOption("20");
+  await page
+    .locator(".az-sidebar")
+    .getByRole("button", { name: "Corso", exact: true })
+    .click();
+  await page.getByRole("button", { name: /Sessione guidata · 20 min/ }).click();
+  await expect(page.locator(".session-clock")).toContainText("/ 20:00");
+  await page
+    .getByRole("button", { name: "Ho letto, passiamo alla pratica →" })
+    .click();
+  for (const option of [1, 1, 2]) {
+    await page.locator(".choice-options button").nth(option).click();
+    await page.getByRole("button", { name: "Continua →", exact: true }).click();
+  }
+  await expect(page.locator(".session-reading")).toBeVisible();
+  await expect(page.locator(".session-clock")).toContainText("/ 20:00");
+  await expect(
+    page.getByRole("heading", { name: "Un altro passo avanti." }),
+  ).not.toBeVisible();
+});
+test("a lesson page carries no leftover panels and reads an Arabic word on tap", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/#/lesson/A0-L0-01");
+  await expect(page.locator(".native-course")).toBeVisible();
+  // the contextual-vocabulary and oral-practice panels were removed
+  await expect(page.getByText(/Lessico contestuale/)).toHaveCount(0);
+  await expect(page.getByText(/Pratica orale/)).toHaveCount(0);
+  await expect(page.locator(".native-article details")).toHaveCount(0);
+  // tapping an Arabic word still opens its card
+  await page.locator(".native-article .arabic-word").first().click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  expect(errors).toEqual([]);
+});
+
+test("first visit: onboarding, course hub, practice and review are connected", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Da dove partiamo?" })).toBeVisible();
+  await page.getByRole("button", { name: /Non conosco l'alfabeto/ }).click();
+  await expect(page.locator(".native-course")).toBeVisible();
+  await expect(page).toHaveURL(/lesson\/A0-L0-01/);
+  await page.locator(".az-sidebar").getByRole("button", { name: "Oggi", exact: true }).click();
+  // the choice is remembered: the home now shows where to resume
+  await expect(page.getByRole("heading", { name: "Da dove partiamo?" })).toHaveCount(0);
+  await expect(page.locator(".az-resume")).toBeVisible();
+  await page.locator(".az-sidebar").getByRole("button", { name: "Corso", exact: true }).click();
+  await expect(
+    page.getByRole("progressbar", { name: "Lezioni principali completate" }),
+  ).toHaveAttribute("aria-valuenow", "0");
+  await page.getByRole("button", { name: /Solo esercizi, lezione per lezione/ }).click();
+  await expect(page).toHaveURL(/practice/);
+  await page.locator(".az-sidebar").getByRole("button", { name: /^Ripasso/ }).click();
+  await expect(page).toHaveURL(/review/);
+  expect(fs.existsSync("dist/course/en")).toBe(false);
+  expect(fs.existsSync("dist/study/en")).toBe(false);
+  expect(fs.readdirSync("dist/assets").some((n) => n.startsWith("course.en-"))).toBe(false);
+});
+
+test("volume library, review shortcut and phone tab bar", async ({ page }) => {
+  await page.goto("/#/library");
+  await expect(page.locator(".volume-shelf .book-card")).toHaveCount(6);
+  await page.locator(".volume-shelf .book-card").first().click();
+  await expect(page.getByRole("region", { name: "Indice del volume A0" })).toBeVisible();
+  await page.locator(".volume-index .volume-entry").first().click();
+  await expect(page.locator(".native-course")).toBeVisible();
+  await page.locator(".az-sidebar").getByRole("button", { name: /^Ripasso/ }).click();
+  await expect(page).toHaveURL(/review/);
+  await expect(page.getByRole("heading", { name: "Quello che ripassi, resta.", exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Quello che ripassi, resta.", exact: true })).toBeVisible();
+  await page.goto("/#/flashcards");
+  await expect(page.getByRole("heading", { name: "Quello che ripassi, resta.", exact: true })).toBeVisible();
+  await page.goto("/#/library");
+  await expect(page.locator(".volume-shelf")).toBeVisible();
+  await page.screenshot({ path: "reports/screenshots/library-desktop.png", fullPage: true });
+  await page.setViewportSize({ width: 320, height: 740 });
+  await expect(page.locator(".volume-shelf .book-card")).toHaveCount(6);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.locator(".az-tabbar").getByRole("button", { name: /^Ripasso/ }).click();
+  await expect(page).toHaveURL(/review/);
+  await page.locator(".az-tabbar").getByRole("button", { name: /Altro/ }).click();
+  await page.locator("#az-more-sheet").getByRole("button", { name: "Biblioteca" }).click();
+  await expect(page).toHaveURL(/library/);
+  await expect(page.locator("#az-more-sheet")).toHaveCount(0);
+});
+
+test("slow section loading keeps navigation visible", async ({ page }) => {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/assets/book-library-*.js", async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto("/");
+  await page.locator(".az-sidebar").getByRole("button", { name: "Biblioteca", exact: true }).click();
+  await expect(page.getByRole("status").getByRole("heading", { name: "Un attimo…" })).toBeVisible();
+  await expect(page.locator(".az-sidebar")).toBeVisible();
+  release();
+  await expect(page.locator(".volume-shelf")).toBeVisible();
+});
+
+test("appearance settings persist and obsolete navigation is removed", async ({ page }) => {
+  await page.goto("/#/settings");
+  await page.getByLabel("Tema del sito").selectOption("dark");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.getByLabel("Dimensione del testo delle lezioni").selectOption("20");
+  await page.waitForTimeout(1000);
+  await page.reload();
+  await expect(page.getByLabel("Tema del sito")).toHaveValue("dark");
+  await expect(page.getByLabel("Dimensione del testo delle lezioni")).toHaveValue("20");
+  await expect(page.locator(".topbar,.course-navigation,.sidebar")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Microlezioni", exact: true })).toHaveCount(0);
+  await expect(page.locator("footer")).toContainText("Gabriele Vierti");
+  await page.screenshot({ path: "reports/screenshots/settings-dark.png", fullPage: true });
+  await page.getByLabel("Tema del sito").selectOption("light");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
+
+test("C1 volume: level tabs, right-to-left dialogue and exercise links", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/#/course/C1");
+  await expect(page.locator(".az-level-tabs button strong")).toHaveText(["A0", "A1", "A2", "B1", "B2", "C1"]);
+  await expect(page.getByRole("tab", { name: /C1/ })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("heading", { name: "C1 · Competenza professionale" })).toBeVisible();
+  await expect(page.locator(".az-lesson")).toHaveCount(35);
+  await page.locator(".az-lesson").first().click();
+  await expect(page.getByRole("heading", { name: "Lettura rapida e mirata di documenti lunghi" })).toBeVisible();
+  await page.locator(".native-outline button", { hasText: "Dialogo 1" }).click();
+  const cell = page.locator('.native-table td[dir="rtl"]').first();
+  await expect(cell).toContainText("الأُسْتَاذُ");
+  await page.locator(".native-outline button", { hasText: "11. Esercizi" }).click();
+  await page.locator(".native-article .exercise-link", { hasText: "Esercizio 3" }).click();
+  await expect(page.locator(".practice-bar select")).toHaveValue("2");
+  await expect(page.locator(".question-prompt")).toHaveAttribute("dir", "rtl");
+  await page.locator(".question-card textarea").fill("annuncia");
+  await page.getByRole("button", { name: /^Correggi/ }).click();
+  await expect(page.locator(".model-answer")).toContainText("annuncia");
+  expect(errors).toEqual([]);
+});
+
+test("mobile lesson: outline drawer and sticky practice switch", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 760 });
+  await page.goto("/#/lesson/A0-L0-01");
+  await expect(page.locator(".native-course")).toBeVisible();
+  const toggle = page.locator(".outline-toggle");
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#lesson-outline")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole("button", { name: /02 Allenati/ }).click();
+  await expect(page.locator(".choice-options button").first()).toBeVisible();
+});
