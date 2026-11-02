@@ -1117,3 +1117,10 @@ html[data-motion="reduce"] *, html[data-motion="reduce"] *::before { animation: 
 
 /* theme change: colours switch instantly */
 html[data-theme-switch] *, html[data-theme-switch] *::before, html[data-theme-switch] *::after { transition: none !important; }
+
+/* Google backup card in the settings */
+.az-cloud p + p { margin-top: 8px; }
+.az-cloud .az-btn { margin-top: 14px; }
+.az-cloud-state { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent-ink); margin-bottom: 6px; }
+.az-cloud-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+.az-cloud-actions .az-btn { margin-top: 0; }

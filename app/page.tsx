@@ -8,6 +8,7 @@ import { useDialogFocus } from "../lib/use-dialog-focus";
 import CourseIndex from "./course-index";
 import { routeHash, parseRoute } from "../lib/routing";
 import { useProgressStore } from "../lib/use-progress-store";
+import { useCloudSync } from "../lib/use-cloud-sync";
 import { LEVELS, LEVEL_NAMES, MAIN_TRACKS, levelOf, type Level } from "../lib/levels";
 import { PracticeHub, ErrorReview } from "./learning-hub";
 import { errorQueue, nextReview } from "../lib/learning";
@@ -74,8 +75,18 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
     [reviewIndex, setReviewIndex] = useState(0),
     [quizAnswer, setQuizAnswer] = useState(""),
     [quizResult, setQuizResult] = useState("");
-  const { data, dataRef, loaded, error: storageError, put, flush, load, importData } =
+  const { data, dataRef, loaded, error: storageError, put: putRecord, flush, load, importData } =
     useProgressStore();
+  const { cloud, connect, disconnect, syncNow, scheduleCloudSync } = useCloudSync({
+    dataRef,
+    loaded,
+    flush,
+    importData,
+  });
+  const put = (key: string, value: any) => {
+    putRecord(key, value);
+    scheduleCloudSync();
+  };
   useStudyTime(loaded && STUDY_VIEWS.includes(view), data, put);
   const custom = Object.entries(data)
     .filter(([k, v]) => k.startsWith("lesson:") && v)
@@ -669,7 +680,16 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
               />
             )}
             {view === "settings" && (
-              <SettingsPage data={data} put={put} loaded={loaded} importData={importData} />
+              <SettingsPage
+                data={data}
+                put={put}
+                loaded={loaded}
+                importData={importData}
+                cloud={cloud}
+                connectCloud={connect}
+                disconnectCloud={disconnect}
+                syncCloud={syncNow}
+              />
             )}
           </Suspense>
         </div>

@@ -28,7 +28,7 @@ Così ho iniziato a costruire lo strumento che avrei voluto trovare. Arabo da Ze
 - Sessioni di studio guidate, che combinano ripasso, un passo di lettura e pratica intorno a un obiettivo giornaliero che scegli tu.
 - Monitoraggio chiaro dei progressi, inclusi tempo di studio attivo, passi di lettura, domande a cui si è risposto, traguardi e stime trasparenti per il livello successivo.
 - Note e lezioni personali, per adattare lo studio alle tue esigenze.
-- Progressi salvati nel browser, con esportazione e importazione di backup.
+- Progressi salvati nel browser, con esportazione e importazione di backup e, se vuoi, una copia nel tuo Google Drive per ritrovarli sugli altri dispositivi.
 - Il corso inizia con il sistema di scrittura e l'arabo standard moderno (MSA) e, con il livello C1, arriva ai testi professionali: rapporti, comunicati diplomatici, testi giuridici ed economici, retorica, sintesi di più fonti, scrittura formale e briefing orale, con le tracce di egiziano e di darija marocchina. L'uso pratico e professionale è la direzione del progetto: questo non significa che il corso da solo ti prepari a una professione.
 
 ## A chi è rivolto
@@ -69,6 +69,39 @@ node scripts/apply-pdf-fixes.mjs --check         # verifica che tutte le correzi
 Il resoconto del confronto, con i refusi trovati nei PDF e i testi da guardare a mano, è in `reports/confronto-pdf.md`; le tabelle a cui mancano ancora delle righe sono elencate in `reports/confronto-pdf-tabelle.md`.
 
 Le tabelle che non si possono ricostruire in automatico (coniugazioni, pronomi, «Errori tipici») sono corrette a mano in `scripts/content-fixes/tables.json`, indicizzate con l'impronta del contenuto originale: se reimporti una lezione dai PDF, le correzioni a mano vengono applicate solo alle tabelle rimaste identiche. Il controllo `glued-arabic` di `content:qa` segnala le parole che sembrano ancora incollate e vanno guardate a occhio.
+
+### Salvataggio nel Google Drive di chi studia (facoltativo)
+
+I progressi restano nel browser. Se vuoi offrire anche una copia nel Drive di
+chi studia (così non si perde cancellando i dati del browser e si ritrova sugli
+altri dispositivi), serve un ID client OAuth di Google. Senza, la funzione non
+compare e il sito resta identico.
+
+1. Su [Google Cloud Console](https://console.cloud.google.com/) crea un progetto
+   e attiva **Google Drive API**.
+2. In *Credenziali* crea un **ID client OAuth** di tipo *Applicazione web* e
+   aggiungi tra le «origini JavaScript autorizzate» l'indirizzo del sito
+   (`https://<utente>.github.io`) e `http://localhost:4173` per le prove.
+3. Nella schermata di consenso OAuth chiedi solo l'ambito
+   `https://www.googleapis.com/auth/drive.appdata`, che dà accesso a una
+   cartella nascosta creata dall'app: non ai file di chi studia.
+4. Passa l'ID client alla build:
+
+```sh
+VITE_GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com npm run build
+```
+
+Su GitHub Pages: *Settings → Secrets and variables → Actions → Variables*, crea
+`GOOGLE_CLIENT_ID` (è un valore pubblico, non un segreto); il workflow lo passa
+già alla build.
+
+L'ambito `drive.appdata` è «sensibile» per Google: finché l'app non è
+verificata, chi si collega vede una schermata di avviso e il limite è di cento
+utenti. La verifica si chiede dalla stessa schermata di consenso.
+
+Il contenuto salvato è lo stesso backup JSON del pulsante «Esporta backup», e a
+ogni sincronizzazione le due copie vengono unite (`lib/cloud-merge.ts`): niente
+viene sovrascritto, nemmeno studiando su due dispositivi nello stesso giorno.
 
 ### Interfaccia
 

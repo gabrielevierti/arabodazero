@@ -7,6 +7,7 @@ const storage = load("lib/storage.ts"),
   grade = load("lib/grading.ts"),
   routing = load("lib/routing.ts"),
   clock = load("lib/study-clock.ts"),
+  cloud = load("lib/cloud-merge.ts"),
   planner = load("lib/session-planner.ts");
 test("v1 database upgrades without losing unknown records; atomic CAS prevents stale writers", async () => {
   const old = await new Promise((resolve, reject) => {
@@ -278,4 +279,50 @@ test("open answers are corrected word by word against the reference", () => {
   const f = r(free, "La mia città è grande", "Scrivi un breve testo sulla tua città");
   assert.equal(f.rating, "model");
   assert.match(f.note, /parole chiave/);
+});
+
+test("merging two devices keeps the work done on both", () => {
+  const phone = {
+    "progress:A1-A1-01": { read: [0, 1, 2], step: 2, openedAt: "2026-03-01T08:00:00.000Z" },
+    "answer:native:A1-A1-01:ex1:1": { rating: "again", attempts: 1, checkedAt: "2026-03-01T08:10:00.000Z", history: [{ at: "2026-03-01T08:10:00.000Z", text: "x", rating: "again", automatic: true }] },
+    "study:2026-03-01": { seconds: 600 },
+    "activity:2026-03-01": true,
+    "note:A1-A1-01": "appunti dal telefono",
+    goal: 20,
+    "alphabet:ب": { known: true, attempts: 3 },
+  };
+  const computer = {
+    "progress:A1-A1-01": { read: [0, 3], step: 3, openedAt: "2026-03-02T19:00:00.000Z" },
+    "answer:native:A1-A1-01:ex1:1": { rating: "good", attempts: 2, checkedAt: "2026-03-02T19:05:00.000Z", history: [{ at: "2026-03-01T08:10:00.000Z", text: "x", rating: "again", automatic: true }, { at: "2026-03-02T19:05:00.000Z", text: "y", rating: "good", automatic: true }] },
+    "study:2026-03-01": { seconds: 120 },
+    "progress:A1-A1-02": { read: [0], step: 0 },
+    goal: 30,
+  };
+  // the computer wrote last: it decides only where neither side shows more work
+  const m = cloud.mergeRecords(phone, computer, "remote");
+  assert.deepEqual(m.data["progress:A1-A1-01"].read, [0, 1, 2, 3]);
+  assert.equal(m.data["progress:A1-A1-01"].step, 3);
+  assert.equal(m.data["answer:native:A1-A1-01:ex1:1"].attempts, 2);
+  assert.equal(m.data["answer:native:A1-A1-01:ex1:1"].rating, "good");
+  assert.equal(m.data["answer:native:A1-A1-01:ex1:1"].history.length, 2);
+  assert.equal(m.data["study:2026-03-01"].seconds, 600, "the longer session is kept");
+  assert.equal(m.data["activity:2026-03-01"], true);
+  assert.equal(m.data["note:A1-A1-01"], "appunti dal telefono", "only this device has the note");
+  assert.equal(m.data.goal, 30, "a setting follows the last device used");
+  assert.deepEqual(m.data["alphabet:ب"], { known: true, attempts: 3 });
+  assert.deepEqual(m.data["progress:A1-A1-02"].read, [0]);
+  assert.ok(m.added.includes("progress:A1-A1-02"));
+  // merging is stable: merging again changes nothing
+  assert.deepEqual(cloud.mergeRecords(m.data, computer, "remote").data, m.data);
+  assert.deepEqual(cloud.mergeRecords(m.data, m.data, "local").changed, []);
+  // the same two devices in the other order give the same result
+  const back = cloud.mergeRecords(computer, phone, "local");
+  assert.deepEqual(back.data["progress:A1-A1-01"].read, [0, 1, 2, 3]);
+  assert.equal(back.data.goal, 30);
+  assert.equal(back.data["study:2026-03-01"].seconds, 600);
+  // a flashcard follows the device that reviewed it last
+  const older = { "card:vocab:1": { front: "a", back: "b", level: "A1", schedule: { reviewedAt: "2026-03-01T00:00:00.000Z", due: "2026-03-05", successes: 1, interval: 1, lastRating: "good" } } };
+  const newer = { "card:vocab:1": { front: "a", back: "b", level: "A1", schedule: { reviewedAt: "2026-03-04T00:00:00.000Z", due: "2026-03-10", successes: 2, interval: 6, lastRating: "good" } } };
+  assert.equal(cloud.mergeRecords(older, newer, "remote").data["card:vocab:1"].schedule.due, "2026-03-10");
+  assert.equal(cloud.mergeRecords(newer, older, "remote").data["card:vocab:1"].schedule.due, "2026-03-10");
 });

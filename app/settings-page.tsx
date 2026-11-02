@@ -3,6 +3,8 @@ import Preferences from "./preferences";
 import BackupManager from "./backup-manager";
 import { OfflineSettings } from "./offline-status";
 import { arabicVoiceStatus, playArabic } from "../lib/audio";
+import CloudCard from "./cloud-card";
+import type { CloudState } from "../lib/use-cloud-sync";
 import {
   needsHomeScreenHint,
   persistenceState,
@@ -104,11 +106,19 @@ export default function SettingsPage({
   put,
   loaded,
   importData,
+  cloud,
+  connectCloud,
+  disconnectCloud,
+  syncCloud,
 }: {
   data: Record<string, any>;
   put: (k: string, v: any) => void;
   loaded: boolean;
   importData: any;
+  cloud: CloudState;
+  connectCloud: () => Promise<void>;
+  disconnectCloud: () => Promise<void>;
+  syncCloud: () => Promise<void>;
 }) {
   return (
     <div className="az-settings">
@@ -141,6 +151,7 @@ export default function SettingsPage({
             senza interazioni.
           </p>
         </section>
+        <CloudCard cloud={cloud} connect={connectCloud} disconnect={disconnectCloud} syncNow={syncCloud} />
         <VoiceStatus rate={data.preferences?.audioRate || 0.8} />
         <StorageSafety />
         <div className="az-settings-wide">

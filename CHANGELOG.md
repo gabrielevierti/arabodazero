@@ -1,5 +1,14 @@
 # Registro delle modifiche
 
+## 2.0.0-rc.7 — novembre 2026
+
+### Salvataggio con Google (facoltativo)
+- Chi vuole può collegare il proprio account Google e tenere una copia dei progressi nel suo Drive: così non si perdono cancellando i dati del browser e si ritrovano sugli altri dispositivi. Senza collegarlo non cambia nulla.
+- La copia va in una cartella nascosta del Drive di chi studia (ambito `drive.appdata`), che solo il sito può leggere: non compare tra i suoi file e il sito non vede né documenti né posta. Il token resta in memoria per la sessione.
+- Ogni sincronizzazione unisce le due copie invece di sovrascriverle (`lib/cloud-merge.ts`): si tengono le pagine lette, i tentativi fatti e i minuti studiati su entrambi i dispositivi; per impostazioni e appunti vince la copia più recente.
+- La sincronizzazione parte da sola quando si smette di studiare o si chiude la pagina, e si può lanciare a mano. «Scollega» revoca il permesso e lascia la copia nel Drive.
+- La funzione compare solo se la build ha un ID client OAuth (`VITE_GOOGLE_CLIENT_ID`); le istruzioni per crearlo sono nel README.
+
 ## 2.0.0-rc.6 — novembre 2026
 
 ### Tabelle: righe perse dalla vecchia importazione
