@@ -22,7 +22,7 @@ Così ho iniziato a costruire lo strumento che avrei voluto trovare. Arabo da Ze
 - Lezioni disponibili direttamente sul sito, con spiegazioni, esempi e tabelle.
 - Esercizi interattivi, con correzione automatica per le risposte vincolate e modelli di riferimento per le risposte aperte.
 - Alfabeto interattivo, con le 28 lettere di base, le forme di congiunzione, parole di esempio, sintesi vocale del dispositivo e un quiz di cinque domande.
-- Scrittura a mano: ricalca, copia e scrivi a memoria ogni lettera nelle quattro posizioni, con il dito o con la penna.
+- Scrittura a mano: ricalca, copia e scrivi a memoria ogni lettera nelle quattro posizioni, con il dito, il mouse o la penna; il tratto si ingrossa e si assottiglia come nella scrittura vera e si può scegliere tra punta tonda e calamo.
 - Correzione automatica anche delle traduzioni e delle risposte brevi: una risposta giusta scritta senza vocali, con una hamza diversa o con ة/ه scambiate viene riconosciuta; per le risposte aperte il confronto è parola per parola con il modello e indica cosa manca. Se la correzione automatica sbaglia, puoi segnare tu la risposta come corretta.
 - Ripasso automatico degli errori e flashcard, anche dalle parole di ogni lezione, con ripetizione dilazionata.
 - Sessioni di studio guidate, che combinano ripasso, un passo di lettura e pratica intorno a un obiettivo giornaliero che scegli tu.
@@ -66,7 +66,7 @@ node scripts/repair-pdf-artifacts.mjs && node scripts/apply-pdf-fixes.mjs && nod
 node scripts/apply-pdf-fixes.mjs --check         # verifica che tutte le correzioni siano applicate
 ```
 
-Il resoconto del confronto, con i refusi trovati nei PDF e i testi da guardare a mano, è in `reports/confronto-pdf.md`.
+Il resoconto del confronto, con i refusi trovati nei PDF e i testi da guardare a mano, è in `reports/confronto-pdf.md`; le tabelle a cui mancano ancora delle righe sono elencate in `reports/confronto-pdf-tabelle.md`.
 
 Le tabelle che non si possono ricostruire in automatico (coniugazioni, pronomi, «Errori tipici») sono corrette a mano in `scripts/content-fixes/tables.json`, indicizzate con l'impronta del contenuto originale: se reimporti una lezione dai PDF, le correzioni a mano vengono applicate solo alle tabelle rimaste identiche. Il controllo `glued-arabic` di `content:qa` segnala le parole che sembrano ancora incollate e vanno guardate a occhio.
 

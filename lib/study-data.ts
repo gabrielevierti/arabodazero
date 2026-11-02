@@ -69,7 +69,8 @@ export function validRecord(key: string, v: any): boolean {
       (v.audioRate === undefined || [0.5, 0.6, 0.8, 1].includes(v.audioRate)) &&
       (v.reviewLimit === undefined ||
         [5, 10, 20, 30].includes(v.reviewLimit)) &&
-      (v.reducedMotion === undefined || typeof v.reducedMotion === "boolean")
+      (v.reducedMotion === undefined || typeof v.reducedMotion === "boolean") &&
+      (v.nib === undefined || ["pen", "qalam"].includes(v.nib))
     );
   if (key.startsWith("micro:"))
     return obj() && str(v.completedAt, 40) && str(v.source, 200);

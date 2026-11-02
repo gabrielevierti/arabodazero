@@ -2,9 +2,7 @@ import WordPronunciation from "./word-pronunciation";
 import { tr, useLanguage } from "../lib/i18n";
 ("use client");
 import { useEffect, useRef, useState } from "react";
-import SpeakingPractice from "./speaking-practice";
 import { playArabic } from "../lib/audio";
-import ContextualVocabulary from "./contextual-vocabulary";
 import { gradeAnswer, withAttempt } from "../lib/grading";
 import { loadCourse } from "../lib/course-loader";
 import { Icon } from "./icons";
@@ -60,6 +58,8 @@ export function Blocks({
               className={
                 "native-table" + (b.header === false ? " headless" : "")
               }
+              // a wide table scrolls sideways instead of squeezing its columns
+              data-columns={Math.max(...b.rows.map((r: any[]) => r.length))}
             >
               <tbody>
                 {b.rows.map((r: any[], j: number) => (
@@ -505,8 +505,6 @@ export default function NativeCourse({
               <Rich text={currentChapter?.title} />
             </h2>
             <Blocks blocks={currentChapter?.blocks} onExercise={openExercise} />
-            <ContextualVocabulary level={lesson.level} put={put} data={data} />
-            <SpeakingPractice />
             <div className="native-article-actions">
               <button
                 className="secondary"

@@ -704,6 +704,14 @@ html[data-width="comfortable"] .native-article { max-width: 820px; }
 html[data-theme="dark"] .arabic-word { text-decoration: none; }
 .native-table-wrap { overflow-x: auto; margin: 10px 0 20px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
 .native-table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+/* five columns or more: let the table scroll sideways, so the words stay readable */
+.native-table[data-columns="5"] { min-width: 620px; }
+.native-table[data-columns="6"] { min-width: 720px; }
+.native-table[data-columns="7"] { min-width: 820px; }
+.native-table[data-columns="8"], .native-table[data-columns="9"],
+.native-table[data-columns="10"], .native-table[data-columns="11"],
+.native-table[data-columns="12"] { min-width: 900px; }
+.native-table-wrap { scrollbar-width: thin; }
 .native-table th { background: var(--surface-soft); font-size: 12.5px; font-weight: 650; text-transform: none; letter-spacing: 0; color: var(--muted); text-align: start; padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .native-table td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; color: var(--ink); }
 .native-table tr:last-child td { border-bottom: 0; }
@@ -830,7 +838,16 @@ html[data-theme="dark"] .az-board { background: #10181a; }
 .az-board-lines path { stroke: var(--line-strong); stroke-width: 1.5; fill: none; }
 .az-board-guide { font-family: var(--font-ar); font-size: 230px; fill: var(--accent); opacity: 0.16; pointer-events: none; }
 .az-board-direction path { stroke: var(--faint); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0.7; }
-.az-ink { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+/* the ink is a filled shape: the line can swell and thin like real writing */
+.az-ink { fill: var(--ink); stroke: none; }
+.az-nib { display: inline-flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--surface-soft); border: 1px solid var(--line); margin-left: auto; }
+.az-nib button { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); background: transparent; border: 0; }
+.az-nib button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); }
+.az-nib-hint { margin-top: 8px; }
+@media (max-width: 900px) {
+  .az-nib { margin-left: 0; width: 100%; }
+  .az-nib button { flex: 1; }
+}
 .az-board-model { position: absolute; top: 10px; right: 12px; min-width: 64px; min-height: 64px; display: grid; place-items: center; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); padding: 0 10px; }
 .az-board-model span { font-family: var(--font-ar); font-size: 46px; line-height: 1.5; color: var(--accent); }
 .az-board-model button { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 600; color: var(--accent); min-height: 40px; }
