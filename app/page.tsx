@@ -43,6 +43,12 @@ const STUDY_VIEWS = ["lesson", "alphabet", "writing", "review", "flashcards"];
 export default function App() {
   return <CourseIndex>{(course) => <Academy course={course} />}</CourseIndex>;
 }
+/** Level names with soft hyphens, so a long word breaks cleanly in a narrow box ("Alfabetiz-zazione"). */
+const SOFT_BREAKS: Record<string, string> = {
+  // the only word longer than the narrowest box (3 columns on a 360px phone)
+  Alfabetizzazione: "Alfa\u00ADbetiz\u00ADzazione",
+};
+const tabLabel = (name = "") => name.replace(/\p{L}+/gu, (w) => SOFT_BREAKS[w] || w);
 function SectionLoading() {
   return (
     <section className="az-loading" role="status" aria-live="polite">
@@ -391,7 +397,7 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
                         }}
                       >
                         <strong>{l}</strong>
-                        <span>{LEVEL_NAMES[l as Level]}</span>
+                        <span>{tabLabel(LEVEL_NAMES[l as Level])}</span>
                       </button>
                     ))}
                   </div>

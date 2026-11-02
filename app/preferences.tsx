@@ -6,7 +6,13 @@ export function applyPreferences(p: Record<string, any>) {
     String(p.arabicScale || 1),
   );
   const root=document.documentElement;
-  root.dataset.theme=p.theme==='dark'||(p.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
+  const theme=p.theme==='dark'||(p.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
+  if(root.dataset.theme&&root.dataset.theme!==theme){
+    // switch colours at once: no half-way transitions between the two themes
+    root.dataset.themeSwitch='1';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{delete root.dataset.themeSwitch}));
+  }
+  root.dataset.theme=theme;
   // keep the phone's browser bar in the same colour as the page
   document.querySelectorAll('meta[name="theme-color"]').forEach((m)=>m.setAttribute('content',root.dataset.theme==='dark'?'#0c1312':'#f6f4ef'));
   root.style.setProperty('--reading-size', (p.readingSize||16)+'px');
@@ -53,12 +59,16 @@ export default function Preferences({
       <label>
         {t("Velocità audio", "Audio speed")}
         <select
-          value={p.audioRate || 0.8}
+          value={!p.audioRate ? 0.8 : p.audioRate <= 0.6 ? 0.5 : p.audioRate}
           onChange={(e) => save("audioRate", Number(e.target.value))}
         >
-          {[0.6, 0.8, 1].map((v) => (
+          {[
+            [0.5, t("Lenta (metà velocità)", "Slow (half speed)")],
+            [0.8, t("Normale", "Normal")],
+            [1, t("Naturale", "Natural")],
+          ].map(([v, label]) => (
             <option key={v} value={v}>
-              {v}×
+              {label}
             </option>
           ))}
         </select>

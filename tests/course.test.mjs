@@ -79,6 +79,10 @@ test("PDF conversion repairs are applied and paradigm tables have one form per c
   const { readdirSync } = await import("node:fs");
   const r = spawnSync(process.execPath, ["scripts/repair-pdf-artifacts.mjs", "--check"], { encoding: "utf8" });
   assert.equal(r.status, 0, "run: node scripts/repair-pdf-artifacts.mjs\n" + r.stdout);
+  // corrections from the comparison with the original PDFs are all applied
+  const p = spawnSync(process.execPath, ["scripts/apply-pdf-fixes.mjs", "--check"], { encoding: "utf8" });
+  assert.equal(p.status, 0, "run: node scripts/apply-pdf-fixes.mjs\n" + p.stdout);
+  assert.doesNotMatch(p.stdout, /"stale": [1-9]/, "PDF corrections no longer match the text:\n" + p.stdout);
   const strip = (s) => String(s).replace(/[\u2066-\u2069\u200E\u200F]/g, "").trim();
   for (const name of readdirSync("public/course").filter((n) => n.endsWith(".json"))) {
     const d = read(`public/course/${name}`);

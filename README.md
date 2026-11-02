@@ -23,7 +23,7 @@ Così ho iniziato a costruire lo strumento che avrei voluto trovare. Arabo da Ze
 - Esercizi interattivi, con correzione automatica per le risposte vincolate e modelli di riferimento per le risposte aperte.
 - Alfabeto interattivo, con le 28 lettere di base, le forme di congiunzione, parole di esempio, sintesi vocale del dispositivo e un quiz di cinque domande.
 - Scrittura a mano: ricalca, copia e scrivi a memoria ogni lettera nelle quattro posizioni, con il dito o con la penna.
-- Correzione tollerante: una risposta giusta scritta senza vocali, con una hamza diversa o con ة/ه scambiate viene riconosciuta e spiegata invece di essere segnata come sbagliata; se la correzione automatica sbaglia, puoi segnare tu la risposta come corretta.
+- Correzione automatica anche delle traduzioni e delle risposte brevi: una risposta giusta scritta senza vocali, con una hamza diversa o con ة/ه scambiate viene riconosciuta; per le risposte aperte il confronto è parola per parola con il modello e indica cosa manca. Se la correzione automatica sbaglia, puoi segnare tu la risposta come corretta.
 - Ripasso automatico degli errori e flashcard, anche dalle parole di ogni lezione, con ripetizione dilazionata.
 - Sessioni di studio guidate, che combinano ripasso, un passo di lettura e pratica intorno a un obiettivo giornaliero che scegli tu.
 - Monitoraggio chiaro dei progressi, inclusi tempo di studio attivo, passi di lettura, domande a cui si è risposto, traguardi e stime trasparenti per il livello successivo.
@@ -58,6 +58,15 @@ node scripts/repair-pdf-artifacts.mjs            # applica le correzioni
 node scripts/repair-pdf-artifacts.mjs --check    # esce con errore se resta qualcosa da correggere
 npm run content:qa                               # controllo generale dei contenuti
 ```
+
+Il confronto con i PDF originali ha prodotto altre correzioni (tabelle e testi con l'arabo rimescolato), salvate in `scripts/content-fixes/pdf-tables.json` e `pdf-fields.json`. Ripartendo dai contenuti importati, l'ordine completo è:
+
+```sh
+node scripts/repair-pdf-artifacts.mjs && node scripts/apply-pdf-fixes.mjs && node scripts/repair-pdf-artifacts.mjs
+node scripts/apply-pdf-fixes.mjs --check         # verifica che tutte le correzioni siano applicate
+```
+
+Il resoconto del confronto, con i refusi trovati nei PDF e i testi da guardare a mano, è in `reports/confronto-pdf.md`.
 
 Le tabelle che non si possono ricostruire in automatico (coniugazioni, pronomi, «Errori tipici») sono corrette a mano in `scripts/content-fixes/tables.json`, indicizzate con l'impronta del contenuto originale: se reimporti una lezione dai PDF, le correzioni a mano vengono applicate solo alle tabelle rimaste identiche. Il controllo `glued-arabic` di `content:qa` segnala le parole che sembrano ancora incollate e vanno guardate a occhio.
 

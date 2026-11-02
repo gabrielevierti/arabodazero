@@ -2,6 +2,8 @@ import AlphabetAssessment from "./alphabet-assessment";
 import { useEffect, useState } from "react";
 import { useLanguage } from "../lib/i18n";
 import { localDay } from "../lib/learning";
+import { playArabic, SLOW_RATE, NORMAL_RATE, isSlow } from "../lib/audio";
+import { Icon } from "./icons";
 // Isolated letters and joining forms; the six right-joining letters have no
 // distinct initial/medial joined forms. Tatweel makes the connection visible.
 import {letters} from "../lib/alphabet-data";
@@ -27,9 +29,7 @@ export default function Alphabet({
   const en = useLanguage() === "en",
     t = (it: string, eng: string) => (en ? eng : it);
   const [index, setIndex] = useState(0),
-    [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]),
     [notice, setNotice] = useState(""),
-    [slow, setSlow] = useState(false),
     [filter, setFilter] = useState(false);
   const [quizMode, setQuizMode] = useState("names");
   const dotInfo: Record<string, [number, string]> = {
@@ -69,34 +69,24 @@ export default function Alphabet({
     [score, setScore] = useState(0);
   const l = letters[index],
     joined = !nonJoining.includes(l[0]);
-  useEffect(() => {
-    if (!("speechSynthesis" in window)) return;
-    const f = () => setVoices(speechSynthesis.getVoices());
-    f();
-    speechSynthesis.addEventListener("voiceschanged", f);
-    return () => {
-      speechSynthesis.removeEventListener("voiceschanged", f);
-      speechSynthesis.cancel();
-    };
+  useEffect(() => () => {
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
   }, []);
+  // one speed for the whole site: the same choice is used by the lessons and saved in Settings
+  const prefs = data.preferences || {};
+  const slow = isSlow(prefs.audioRate);
+  const setSlow = (on: boolean) =>
+    put("preferences", { ...prefs, audioRate: on ? SLOW_RATE : NORMAL_RATE });
   function speak(text: string) {
     setNotice("");
-    const voice = voices.find((v) => v.lang.toLowerCase().startsWith("ar"));
-    if (!voice) {
+    playArabic(text, slow ? SLOW_RATE : NORMAL_RATE).catch(() =>
       setNotice(
         t(
           "Nessuna voce araba disponibile. Installa una voce araba nelle impostazioni del dispositivo.",
           "No Arabic voice is available. Install one in your device settings.",
         ),
-      );
-      return;
-    }
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.voice = voice;
-    u.lang = voice.lang;
-    u.rate = slow ? 0.65 : 0.9;
-    speechSynthesis.speak(u);
+      ),
+    );
   }
   function choices(q: number) {
     setOptions(
@@ -412,27 +402,30 @@ export default function Alphabet({
             </span>
             <span>{en ? l[6] : l[5]}</span>
           </div>
-          {onWrite && (
-            <button type="button" className="secondary write-link" onClick={() => onWrite(l[0])}>
-              Esercitati a scriverla →
-            </button>
-          )}
-          <div className="letter-audio">
-            <button className="secondary" onClick={() => speak(l[3])}>
-              {t("◖ Nome della lettera", "◖ Letter name")}
-            </button>
-            <button className="secondary" onClick={() => speak(l[4])}>
-              {t("◖ Ascolta la parola", "◖ Hear the word")}
-            </button>
+          <div className="letter-actions">
+            <div className="letter-audio">
+              <button type="button" className="secondary" onClick={() => speak(l[3])}>
+                <Icon name="sound" size={16} /> {t("Nome della lettera", "Letter name")}
+              </button>
+              <button type="button" className="secondary" onClick={() => speak(l[4])}>
+                <Icon name="sound" size={16} /> {t("Ascolta la parola", "Hear the word")}
+              </button>
+            </div>
+            <div className="speed-toggle" role="group" aria-label={t("Velocità dell'audio", "Audio speed")}>
+              <span>{t("Velocità", "Speed")}</span>
+              <button type="button" aria-pressed={!slow} onClick={() => setSlow(false)}>
+                {t("Normale", "Normal")}
+              </button>
+              <button type="button" aria-pressed={slow} onClick={() => setSlow(true)}>
+                {t("Lenta", "Slow")}
+              </button>
+            </div>
+            {onWrite && (
+              <button type="button" className="az-link write-link" onClick={() => onWrite(l[0])}>
+                {t("Esercitati a scriverla", "Practise writing it")} <Icon name="arrow" size={16} />
+              </button>
+            )}
           </div>
-          <label className="inline-check">
-            <input
-              type="checkbox"
-              checked={slow}
-              onChange={(e) => setSlow(e.target.checked)}
-            />
-            {t("Ascolto lento", "Slow playback")}
-          </label>
           <small className="muted">
             {t(
               "Usa la voce araba del tuo dispositivo: è sintetica, quindi ascolta più volte e imita.",

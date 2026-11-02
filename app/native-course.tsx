@@ -882,7 +882,7 @@ export default function NativeCourse({
                             : "Confronta con il modello."}
                     </div>
                     {answer.note && <p className="grade-note">{answer.note}</p>}
-                    {question.mode === "open" && (
+                    {question.mode === "open" && isModel && (
                       <p>
                         Qui non c'è una sola risposta giusta: confronta la tua
                         con il modello e decidi tu.
@@ -1016,13 +1016,13 @@ export default function NativeCourse({
                         </button>
                       </div>
                     )}
-                    {question.mode !== "open" &&
-                      question.mode !== "choice" &&
+                    {question.mode !== "choice" &&
                       ["again", "partial"].includes(answer.rating) && (
                         <div className="override">
                           <small>
-                            Hai scritto una forma equivalente che il controllo
-                            non conosce?
+                            {question.mode === "open"
+                              ? "La correzione automatica confronta le parole con un solo modello: se la tua traduzione dice la stessa cosa con parole diverse, segnalala."
+                              : "Hai scritto una forma equivalente che il controllo non conosce?"}
                           </small>
                           <button
                             type="button"
@@ -1094,7 +1094,7 @@ export default function NativeCourse({
                     onClick={() => submit()}
                   >
                     {question.mode === "open"
-                      ? tr("Mostra la correzione")
+                      ? tr("Correggi")
                       : tr("Controlla")}{" "}
                     ✓
                   </button>

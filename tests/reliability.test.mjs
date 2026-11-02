@@ -91,10 +91,12 @@ test("normalization preserves meaningful Arabic distinctions and respects explic
     grade.evaluateAnswer({ ...q, normalization: "arabic-unvocalized" }, "أب"),
     "good",
   );
+  // open answers are now corrected against the reference too
   assert.equal(
-    grade.evaluateAnswer({ mode: "open", answers: ["x"] }, "x"),
-    "model",
+    grade.evaluateAnswer({ mode: "open", answers: ["casa grande"] }, "casa grande"),
+    "good",
   );
+  assert.equal(grade.evaluateAnswer({ mode: "open" }, "x"), "model");
   assert.equal(grade.evaluateAnswer(q, "  "), "empty");
   assert.equal(
     grade.evaluateAnswer({ mode: "input", answers: ["a", "b"] }, " b "),
@@ -243,10 +245,37 @@ test("grading accepts what a teacher accepts and explains the rest", () => {
   assert.match(almost.note, /tāʾ marbūṭa/);
   // final punctuation never decides
   assert.equal(r(q(["فِي المَدِينَةِ مَتْحَفٌ"]), "في المدينة متحف.").rating, "good");
-  // a different full sentence is compared with the model, not marked wrong
-  assert.equal(r(q(["فِي المَدِينَةِ مَتْحَفٌ حَدِيثٌ"]), "هناك متحف حديث في المدينة").rating, "model");
+  // a sentence with the same words in another order is accepted
+  assert.equal(r(q(["فِي المَدِينَةِ مَتْحَفٌ حَدِيثٌ"]), "هناك متحف حديث في المدينة").rating, "good");
   assert.equal(r(q(["هٰذِهِ"]), "هذا").rating, "again");
   // transliteration: the macron is the point of the exercise
   assert.equal(r(q(["banāt"]), "banat").rating, "partial");
   assert.equal(r(q(["bint"]), "Bint").rating, "good");
+});
+
+test("open answers are corrected word by word against the reference", () => {
+  const open = (model, extra = {}) => ({ mode: "open", model, ...extra });
+  const r = (question, text, instruction = "") => grade.gradeOpen(question, text, instruction);
+  // translation into Arabic: no vowels needed, article and spelling slips tolerated
+  const ar = open("\u2067أَنْقَذَ خَفَرُ السَّوَاحِلِ قَارِبًا يُقِلُّ سِتِّينَ شَخْصًا.\u2069");
+  assert.equal(r(ar, "انقذ خفر السواحل قاربا يقل ستين شخصا").rating, "good");
+  const half = r(ar, "انقذ خفر السواحل قاربا");
+  assert.equal(half.rating, "partial");
+  assert.deepEqual(half.missing.length, 3);
+  assert.equal(r(ar, "the coast guard").rating, "again");
+  // translation into Italian: articles, gender endings and bracketed notes do not count
+  const it = open("«Le autorità hanno riconosciuto lo status di rifugiato a duecento persone.» (giuridico)");
+  assert.equal(r(it, "le autorita hanno riconosciuto lo status di rifugiati a duecento persone").rating, "good");
+  assert.equal(r(it, "Le autorità hanno riconosciuto").rating, "again");
+  // alternatives inside quotes: either is fine
+  const alt = open("relativo: «Non so che cosa sia successo / quello che è successo.»");
+  assert.equal(r(alt, "relativo: non so che cosa sia successo").rating, "good");
+  // a lost negation is never «correct»
+  const neg = open("«Il ministro non ha confermato la notizia della riunione di domani.»");
+  assert.notEqual(r(neg, "Il ministro ha confermato la notizia della riunione di domani").rating, "good");
+  // free writing keeps the learner's judgement, with a hint
+  const free = open("Esempio di testo lungo con molte parole diverse che descrivono la città, il quartiere, la casa, la famiglia, il lavoro, gli amici e la scuola dove studio ogni giorno");
+  const f = r(free, "La mia città è grande", "Scrivi un breve testo sulla tua città");
+  assert.equal(f.rating, "model");
+  assert.match(f.note, /parole chiave/);
 });

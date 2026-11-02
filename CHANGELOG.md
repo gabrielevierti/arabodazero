@@ -1,5 +1,25 @@
 # Registro delle modifiche
 
+## 2.0.0-rc.4 — novembre 2026
+
+### Contenuti: confronto con i PDF originali
+- Il testo dei sei volumi è stato estratto con l'importatore del progetto e confrontato parola per parola con il sito.
+- 10.830 celle di tabella corrette (A0–B2): celle fuse, parole arabe nella colonna sbagliata, dialoghi ed elenchi in arabo con l'ordine delle parole rimescolato dalla vecchia importazione.
+- 98 testi ricostruiti dal PDF (dialoghi, avvisi, lettere, modelli di risposta).
+- Tolti circa 35.000 spazi spuri prima della punteggiatura e dentro «» e () attorno alle parole arabe.
+- Correzioni ripetibili: `scripts/content-fixes/pdf-tables.json`, `pdf-fields.json`, `node scripts/apply-pdf-fixes.mjs`.
+- `reports/confronto-pdf.md`: refusi trovati nei PDF e testi da controllare a mano.
+
+### Esercizi
+- Correzione automatica anche per le risposte aperte: traduzioni e risposte brevi vengono confrontate parola per parola con il modello (vocali facoltative, articolo e piccoli refusi tollerati, note tra parentesi e alternative facoltative, negazione obbligatoria), con l'elenco di cosa manca o è diverso.
+- I testi liberi lunghi restano in autovalutazione, con il conteggio delle parole chiave del modello usate.
+- «La mia risposta è corretta» anche per le risposte aperte.
+
+### Interfaccia
+- Le schede dei livelli nel corso non escono più dal box: griglia a 6, 3 o 2 colonne, nomi che vanno a capo.
+- Ascolto lento davvero più lento (metà velocità) e condiviso tra alfabeto, lezioni e impostazioni.
+- Pulsanti dell'alfabeto distanziati e raggruppati (ascolto, velocità, scrittura a mano).
+
 ## 2.0.0-rc.3 — novembre 2026
 
 ### Contenuti

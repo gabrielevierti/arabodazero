@@ -73,7 +73,7 @@ for (const width of [320, 375, 390, 768, 1024, 1440])
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/#/");
     await expect(
-      page.getByRole("heading", { level: 1, name: /^Buon(giorno|pomeriggio|asera|anotte)\.$/ }),
+      page.getByRole("heading", { level: 1, name: /^Buon(giorno| pomeriggio|asera|anotte)\.$/ }),
     ).toBeVisible();
     expect(
       await page.evaluate(
@@ -223,7 +223,7 @@ test("first-load JavaScript budget and selected language only", async ({
 }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { level: 1, name: /^Buon(giorno|pomeriggio|asera|anotte)\.$/ }),
+    page.getByRole("heading", { level: 1, name: /^Buon(giorno| pomeriggio|asera|anotte)\.$/ }),
   ).toBeVisible();
   const resources = await page.evaluate(() =>
     performance.getEntriesByType("resource").map((e) => ({
@@ -447,7 +447,7 @@ test("C1 volume: level tabs, right-to-left dialogue and exercise links", async (
   await expect(page.locator(".practice-bar select")).toHaveValue("2");
   await expect(page.locator(".question-prompt")).toHaveAttribute("dir", "rtl");
   await page.locator(".question-card textarea").fill("annuncia");
-  await page.getByRole("button", { name: /Mostra la correzione/ }).click();
+  await page.getByRole("button", { name: /^Correggi/ }).click();
   await expect(page.locator(".model-answer")).toContainText("annuncia");
   expect(errors).toEqual([]);
 });

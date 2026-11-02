@@ -49,6 +49,6 @@ un ordine diverso da quello stampato: il testo estratto segue la pagina stampata
 ## Limiti noti
 
 - La traduzione inglese archiviata copre solo A0–B2: il prodotto è solo in italiano.
-- Le risposte aperte restano in autovalutazione con il modello del Soluzionario.
+- Le risposte aperte sono corrette automaticamente parola per parola con il modello del Soluzionario (lib/grading.ts); i testi liberi lunghi restano in autovalutazione.
 - Se un volume cambia impaginazione (colori delle tabelle, dimensioni dei
   titoli), vanno aggiornate le costanti in `layout.py` e `blocks.py`.

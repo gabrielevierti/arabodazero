@@ -8,6 +8,11 @@ export type AudioAsset = {
   source: string;
   verified: boolean;
 };
+/** Speech rates. "Slow" is half speed: smaller differences are hard to hear on short words. */
+export const SLOW_RATE = 0.5;
+export const NORMAL_RATE = 0.8;
+export const isSlow = (rate?: number) => typeof rate === "number" && rate <= 0.6;
+
 /** Only bundled, explicitly verified recordings are eligible. Empty by default. */
 export async function playArabic(
   text: string,
@@ -41,11 +46,15 @@ export async function playArabic(
     throw Error("Speech synthesis unavailable");
   const voice = await pickArabicVoice();
   if (!voice) throw Error("No Arabic voice installed");
-  speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text.replace(/[\u2066-\u2069]/g, ""));
   u.voice = voice;
   u.lang = voice.lang;
   u.rate = rate;
+  if (speechSynthesis.speaking || speechSynthesis.pending) {
+    speechSynthesis.cancel();
+    // some engines drop an utterance queued in the same tick as cancel()
+    await new Promise((r) => setTimeout(r, 60));
+  }
   speechSynthesis.speak(u);
   return () => speechSynthesis.cancel();
 }

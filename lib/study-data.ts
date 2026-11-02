@@ -66,7 +66,7 @@ export function validRecord(key: string, v: any): boolean {
       obj() &&
       (v.arabicScale === undefined ||
         [1, 1.2, 1.4, 1.6].includes(v.arabicScale)) &&
-      (v.audioRate === undefined || [0.6, 0.8, 1].includes(v.audioRate)) &&
+      (v.audioRate === undefined || [0.5, 0.6, 0.8, 1].includes(v.audioRate)) &&
       (v.reviewLimit === undefined ||
         [5, 10, 20, 30].includes(v.reviewLimit)) &&
       (v.reducedMotion === undefined || typeof v.reducedMotion === "boolean")
