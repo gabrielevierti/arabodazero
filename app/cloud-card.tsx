@@ -51,7 +51,8 @@ export default function CloudCard({
           <p className="az-small">
             La copia finisce in una cartella nascosta del tuo Drive, che solo questo sito può
             leggere: non compare tra i tuoi file e nessun altro sito può aprirla. Il sito non
-            vede né i tuoi documenti né la tua posta.
+            vede né i tuoi documenti né la tua posta.{" "}
+            <a href="./privacy.html">Come vengono trattati i dati</a>.
           </p>
           <button type="button" className="az-btn az-btn-primary" disabled={busy} onClick={run(connect)}>
             {busy ? "Collegamento in corso…" : "Collega il tuo account Google"}

@@ -217,6 +217,12 @@ test("offline shell and cached lesson survive reload", async ({
   await page.reload();
   await expect(page.locator(".native-course")).toBeVisible();
   await expect(page.getByText(/Sei offline/)).toBeVisible();
+  // the static pages are served as themselves, not replaced by the app
+  await context.setOffline(false);
+  await page.goto("/privacy.html");
+  await expect(page.getByRole("heading", { name: "Informativa sulla privacy" })).toBeVisible();
+  await page.goto("/termini.html");
+  await expect(page.getByRole("heading", { name: "Termini di servizio" })).toBeVisible();
 });
 test("first-load JavaScript budget and selected language only", async ({
   page,

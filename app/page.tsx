@@ -701,7 +701,8 @@ function Academy({ course }: { course: typeof import("../data/course.json") }) {
             © {new Date().getFullYear()} Gabriele Vierti ·{" "}
             <a href="https://github.com/gabrielevierti/arabic-academy" target="_blank" rel="noopener noreferrer">
               Codice e segnalazioni su GitHub
-            </a>
+            </a>{" "}
+            · <a href="./privacy.html">Privacy</a> · <a href="./termini.html">Termini</a>
           </span>
         </footer>
       </main>

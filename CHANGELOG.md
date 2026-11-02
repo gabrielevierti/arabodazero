@@ -1,5 +1,13 @@
 # Registro delle modifiche
 
+## 2.0.0-rc.8 — novembre 2026
+
+### Pagine per Google
+- Nuove pagine `privacy.html` (informativa sulla privacy) e `termini.html` (termini di servizio), richieste da Google nella pagina *Branding* per pubblicare l'accesso: `https://www.arabodazero.it/privacy.html` e `https://www.arabodazero.it/termini.html`. Sono pagine semplici, leggibili anche col tema scuro e dal telefono.
+- I link alle due pagine sono in fondo alla home e nel riquadro del salvataggio con Google.
+- Il funzionamento offline apre queste pagine invece di rimandare sempre alla home.
+- README: origini JavaScript e indirizzi di *Branding* corretti per `www.arabodazero.it`, e le righe del workflow che passano l'ID client alla build.
+
 ## 2.0.0-rc.7 — novembre 2026
 
 ### Salvataggio con Google (facoltativo)

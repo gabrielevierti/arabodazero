@@ -80,24 +80,37 @@ compare e il sito resta identico.
 1. Su [Google Cloud Console](https://console.cloud.google.com/) crea un progetto
    e attiva **Google Drive API**.
 2. In *Credenziali* crea un **ID client OAuth** di tipo *Applicazione web* e
-   aggiungi tra le «origini JavaScript autorizzate» l'indirizzo del sito
-   (`https://<utente>.github.io`) e `http://localhost:4173` per le prove.
-3. Nella schermata di consenso OAuth chiedi solo l'ambito
+   aggiungi tra le «origini JavaScript autorizzate» l'indirizzo esatto da cui si
+   apre il sito, senza barra finale: per il sito pubblicato
+   `https://www.arabodazero.it` (e `https://arabodazero.it`), per le prove
+   `http://localhost:4173`.
+3. In *Branding* indica come home page `https://www.arabodazero.it`, come
+   informativa sulla privacy `https://www.arabodazero.it/privacy.html`, come
+   termini di servizio `https://www.arabodazero.it/termini.html` e
+   `arabodazero.it` tra i domini autorizzati. Le due pagine sono in `public/`.
+4. In *Accesso ai dati* chiedi solo l'ambito
    `https://www.googleapis.com/auth/drive.appdata`, che dà accesso a una
    cartella nascosta creata dall'app: non ai file di chi studia.
-4. Passa l'ID client alla build:
+5. Passa l'ID client alla build:
 
 ```sh
 VITE_GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com npm run build
 ```
 
 Su GitHub Pages: *Settings → Secrets and variables → Actions → Variables*, crea
-`GOOGLE_CLIENT_ID` (è un valore pubblico, non un segreto); il workflow lo passa
-già alla build.
+`GOOGLE_CLIENT_ID` (è un valore pubblico, non un segreto). Il workflow
+`.github/workflows/pages.yml` lo passa alla build con queste righe sotto
+`npm run build`; senza, il riquadro non compare:
 
-L'ambito `drive.appdata` è «sensibile» per Google: finché l'app non è
-verificata, chi si collega vede una schermata di avviso e il limite è di cento
-utenti. La verifica si chiede dalla stessa schermata di consenso.
+```yaml
+      - run: npm run build
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+```
+
+`drive.appdata` non è un ambito sensibile, quindi non serve la verifica completa
+dell'app: basta pubblicarla («In produzione») dalla pagina *Pubblico*. Finché
+resta «In test» possono collegarsi solo gli utenti di prova indicati lì.
 
 Il contenuto salvato è lo stesso backup JSON del pulsante «Esporta backup», e a
 ogni sincronizzazione le due copie vengono unite (`lib/cloud-merge.ts`): niente
