@@ -1,56 +1,85 @@
-# Arabo da Zero
+<div align="center">
 
-Un percorso di apprendimento gratuito e aperto per l'arabo, con lezioni, esercizi e monitoraggio dei progressi organizzati in un unico posto.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/banner-dark.svg">
+  <img src="docs/readme/banner-light.svg" width="100%" alt="Arabo da Zero: un percorso gratuito e aperto per imparare l'arabo, dall'alfabeto al livello C1, con lezioni ed esercizi.">
+</picture>
 
-Arabo da Zero è nata da un'esigenza personale: voglio imparare l'arabo senza pagare un corso né perdermi tra decine di risorse separate.
+<p>
+  <a href="https://www.arabodazero.it"><b>Inizia a studiare</b></a> ·
+  <a href="#cosa-offre"><b>Cosa offre</b></a> ·
+  <a href="#per-chi-sviluppa"><b>Per chi sviluppa</b></a> ·
+  <a href="#segnalazioni-e-contributi"><b>Contribuire</b></a>
+</p>
 
-Il progetto è pensato per chiunque cerchi un percorso di apprendimento strutturato e voglia usare l'arabo nella vita reale, anche in contesti professionali.
+</div>
 
-## Perché l'ho creato
+**Arabo da Zero** è un percorso gratuito e aperto per imparare l'arabo: lezioni, esercizi e monitoraggio dei progressi, organizzati in un unico posto. È pensato per chiunque cerchi uno studio strutturato e voglia usare l'arabo nella vita reale, anche in contesti professionali.
 
-Di risorse gratuite per imparare l'arabo online ce ne sono molte. La difficoltà che ho incontrato è stata metterle insieme: un sito per l'alfabeto, un video per la pronuncia, un PDF per la grammatica ed esercizi da qualche altra parte. Capire cosa studiare prima, cosa viene dopo e cosa ripassare diventa un lavoro a sé stante.
+**→ Il corso è online su [arabodazero.it](https://www.arabodazero.it)**
 
-Non riuscivo a trovare una risorsa gratuita che mettesse tutto insieme come mi serviva: un percorso organizzato, spiegazioni accessibili, esercizi con cui fare pratica e un modo semplice per tenere traccia dei progressi.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/features-dark.svg">
+  <img src="docs/readme/features-light.svg" width="100%" alt="Cosa offre: un percorso per livelli dall'alfabeto al C1; alfabeto e scrittura a mano; correzione automatica; ripasso e flashcard; sessioni guidate; progressi salvati nel browser e, se vuoi, nel tuo Google Drive.">
+</picture>
 
-Volevo anche un approccio più vicino all'uso pratico e professionale della lingua. Le frasi semplici aiutano a imparare le basi, ma il mio obiettivo non è fermarmi a "il cavallo beve il latte in cucina": voglio capire le informazioni, leggere testi e comunicare in situazioni reali.
+## Perché esiste
 
-Così ho iniziato a costruire lo strumento che avrei voluto trovare. Arabo da Zero è il risultato di quel lavoro, ed è ancora in evoluzione.
+Di risorse gratuite per imparare l'arabo online ce ne sono tante. Il difficile è metterle insieme: un sito per l'alfabeto, un video per la pronuncia, un PDF per la grammatica, gli esercizi da qualche altra parte. Capire cosa studiare prima, cosa viene dopo e cosa ripassare diventa un lavoro a sé.
 
-## Cosa offre
+Non trovavo una risorsa gratuita che mettesse tutto insieme come serviva a me: un percorso ordinato, spiegazioni accessibili, esercizi per fare pratica e un modo semplice per seguire i progressi. Volevo anche un approccio vicino all'uso pratico e professionale della lingua: le frasi semplici servono per le basi, ma l'obiettivo non è fermarsi a «il cavallo beve il latte in cucina». È capire le informazioni, leggere testi veri e comunicare in situazioni reali.
 
-- Un percorso di apprendimento organizzato per livelli, dall'alfabeto (A0) al livello C1 «Competenza professionale», così sai da dove iniziare e come procedere.
-- Lezioni disponibili direttamente sul sito, con spiegazioni, esempi e tabelle.
-- Esercizi interattivi, con correzione automatica per le risposte vincolate e modelli di riferimento per le risposte aperte.
-- Alfabeto interattivo, con le 28 lettere di base, le forme di congiunzione, parole di esempio, sintesi vocale del dispositivo e un quiz di cinque domande.
-- Scrittura a mano: ricalca, copia e scrivi a memoria ogni lettera nelle quattro posizioni, con il dito, il mouse o la penna; il tratto si ingrossa e si assottiglia come nella scrittura vera e si può scegliere tra punta tonda e calamo.
-- Correzione automatica anche delle traduzioni e delle risposte brevi: una risposta giusta scritta senza vocali, con una hamza diversa o con ة/ه scambiate viene riconosciuta; per le risposte aperte il confronto è parola per parola con il modello e indica cosa manca. Se la correzione automatica sbaglia, puoi segnare tu la risposta come corretta.
-- Ripasso automatico degli errori e flashcard, anche dalle parole di ogni lezione, con ripetizione dilazionata.
-- Sessioni di studio guidate, che combinano ripasso, un passo di lettura e pratica intorno a un obiettivo giornaliero che scegli tu.
-- Monitoraggio chiaro dei progressi, inclusi tempo di studio attivo, passi di lettura, domande a cui si è risposto, traguardi e stime trasparenti per il livello successivo.
-- Note e lezioni personali, per adattare lo studio alle tue esigenze.
-- Progressi salvati nel browser, con esportazione e importazione di backup e, se vuoi, una copia nel tuo Google Drive per ritrovarli sugli altri dispositivi.
-- Il corso inizia con il sistema di scrittura e l'arabo standard moderno (MSA) e, con il livello C1, arriva ai testi professionali: rapporti, comunicati diplomatici, testi giuridici ed economici, retorica, sintesi di più fonti, scrittura formale e briefing orale, con le tracce di egiziano e di darija marocchina. L'uso pratico e professionale è la direzione del progetto: questo non significa che il corso da solo ti prepari a una professione.
+Così ho costruito lo strumento che avrei voluto trovare. Arabo da Zero è il risultato, ed è ancora in evoluzione.
 
-## A chi è rivolto
+## Cosa offre
 
-A chiunque voglia iniziare a imparare l'arabo, a chi ha già raccolto materiali ma fatica a organizzarli e a chi cerca un posto gratuito dove studiare con costanza.
+**Il percorso**
 
-Non devi condividere gli obiettivi professionali o personali che mi hanno portato a costruirlo. Se ti aiuta a imparare qualcosa, il progetto sta già facendo ciò per cui è stato creato.
+- **Livelli dall'alfabeto (A0) al C1 «Competenza professionale»**, così sai sempre da dove iniziare e come andare avanti.
+- **Lezioni sul sito**, con spiegazioni, esempi e tabelle.
+- **Dalla scrittura ai testi professionali.** Il corso parte dal sistema di scrittura e dall'arabo standard moderno (MSA) e, al C1, arriva a rapporti, comunicati diplomatici, testi giuridici ed economici, retorica, sintesi di più fonti, scrittura formale e briefing orale, con tracce di egiziano e di darija marocchina. L'uso professionale è la direzione del progetto: non significa che il corso, da solo, prepari a una professione.
+
+**Pratica e correzione**
+
+- **Alfabeto interattivo:** le 28 lettere di base, le forme di congiunzione, parole di esempio, la sintesi vocale del dispositivo e un quiz di cinque domande.
+- **Scrittura a mano:** ricalca, copia e scrivi a memoria ogni lettera nelle quattro posizioni, con il dito, il mouse o la penna. Il tratto si ingrossa e si assottiglia come nella scrittura vera, con punta tonda o calamo.
+- **Esercizi interattivi** con correzione automatica per le risposte chiuse e modelli di riferimento per quelle aperte.
+- **Correzione che conosce l'arabo:** una risposta giusta scritta senza vocali, con una hamza diversa o con ة/ه scambiate viene riconosciuta. Per le risposte aperte il confronto con il modello è parola per parola e indica cosa manca. Se la correzione sbaglia, puoi segnare tu la risposta come corretta.
+
+**Studio costante**
+
+- **Ripasso automatico degli errori e flashcard**, anche dalle parole di ogni lezione, con ripetizione dilazionata.
+- **Sessioni guidate** che uniscono ripasso, un passo di lettura e pratica intorno a un obiettivo giornaliero scelto da te.
+- **Progressi chiari:** tempo di studio attivo, passi di lettura, domande risposte, traguardi e stime trasparenti per il livello successivo.
+- **Note e lezioni personali**, per adattare lo studio alle tue esigenze.
+- **I dati restano tuoi:** i progressi sono salvati nel browser, con backup da esportare e importare e, se vuoi, una copia nel tuo Google Drive per ritrovarli sugli altri dispositivi.
+
+### A chi è rivolto
+
+A chi vuole iniziare a imparare l'arabo, a chi ha già raccolto materiali ma fatica a organizzarli e a chi cerca un posto gratuito dove studiare con costanza. Non serve condividere gli obiettivi che mi hanno portato a costruirlo: se ti aiuta a imparare qualcosa, il progetto sta già facendo ciò per cui è nato.
 
 ## Per chi sviluppa
 
+Serve Node.js 22.13 o successivo.
+
 ```sh
 npm ci
-npm run dev        # sito in locale
-npm test           # test unitari e dei contenuti
-npm run build      # versione pubblicabile in dist/
+npm run dev          # sito in locale
+npm test             # test unitari e dei contenuti
+npm run build        # versione pubblicabile in dist/
+npx playwright test  # test end-to-end, accessibilità (axe) e tema scuro su mobile
 ```
 
-I volumi in PDF si importano con gli script in `scripts/volume-import/` (vedi il README della cartella): il testo arabo viene ricostruito dai glifi del PDF e rimesso in ordine logico, gli esercizi vengono collegati alle soluzioni.
+**Interfaccia.** Lo stile è in `app/design.css` (caricato dopo `app/globals.css`): colori, spazi e raggi sono variabili CSS con versione chiara e scura. I caratteri (Inter e Noto Naskh Arabic, licenza OFL) sono in `public/fonts/` e vengono salvati per l'uso offline.
 
-### Correzioni ai contenuti importati
+<details>
+<summary><b>Importare e correggere i contenuti dai PDF</b></summary>
 
-L'importazione dai PDF lascia alcuni difetti tipici (parole arabe incollate, celle di tabella fuse, a capo nel mezzo delle frasi, feedback generici). `scripts/repair-pdf-artifacts.mjs` li corregge in modo ripetibile su `public/course/`:
+<br>
+
+I volumi in PDF si importano con gli script in `scripts/volume-import/` (vedi il README della cartella): il testo arabo viene ricostruito dai glifi del PDF e rimesso in ordine logico, e gli esercizi vengono collegati alle soluzioni.
+
+L'importazione lascia alcuni difetti tipici (parole arabe incollate, celle di tabella fuse, a capo a metà frase, feedback generici). `scripts/repair-pdf-artifacts.mjs` li corregge in modo ripetibile su `public/course/`:
 
 ```sh
 node scripts/repair-pdf-artifacts.mjs --report   # cosa cambierebbe, senza scrivere
@@ -66,41 +95,30 @@ node scripts/repair-pdf-artifacts.mjs && node scripts/apply-pdf-fixes.mjs && nod
 node scripts/apply-pdf-fixes.mjs --check         # verifica che tutte le correzioni siano applicate
 ```
 
-Il resoconto del confronto, con i refusi trovati nei PDF e i testi da guardare a mano, è in `reports/confronto-pdf.md`; le tabelle a cui mancano ancora delle righe sono elencate in `reports/confronto-pdf-tabelle.md`.
+Il resoconto del confronto, con i refusi trovati nei PDF e i testi da guardare a mano, è in `reports/confronto-pdf.md`; le tabelle a cui mancano ancora righe sono in `reports/confronto-pdf-tabelle.md`.
 
-Le tabelle che non si possono ricostruire in automatico (coniugazioni, pronomi, «Errori tipici») sono corrette a mano in `scripts/content-fixes/tables.json`, indicizzate con l'impronta del contenuto originale: se reimporti una lezione dai PDF, le correzioni a mano vengono applicate solo alle tabelle rimaste identiche. Il controllo `glued-arabic` di `content:qa` segnala le parole che sembrano ancora incollate e vanno guardate a occhio.
+Le tabelle che non si possono ricostruire in automatico (coniugazioni, pronomi, «Errori tipici») sono corrette a mano in `scripts/content-fixes/tables.json`, indicizzate con l'impronta del contenuto originale: se reimporti una lezione dai PDF, le correzioni a mano si applicano solo alle tabelle rimaste identiche. Il controllo `glued-arabic` di `content:qa` segnala le parole che sembrano ancora incollate e vanno guardate a occhio.
 
-### Salvataggio nel Google Drive di chi studia (facoltativo)
+</details>
 
-I progressi restano nel browser. Se vuoi offrire anche una copia nel Drive di
-chi studia (così non si perde cancellando i dati del browser e si ritrova sugli
-altri dispositivi), serve un ID client OAuth di Google. Senza, la funzione non
-compare e il sito resta identico.
+<details>
+<summary><b>Copia dei progressi nel Google Drive di chi studia (facoltativa)</b></summary>
 
-1. Su [Google Cloud Console](https://console.cloud.google.com/) crea un progetto
-   e attiva **Google Drive API**.
-2. In *Credenziali* crea un **ID client OAuth** di tipo *Applicazione web* e
-   aggiungi tra le «origini JavaScript autorizzate» l'indirizzo esatto da cui si
-   apre il sito, senza barra finale: per il sito pubblicato
-   `https://www.arabodazero.it` (e `https://arabodazero.it`), per le prove
-   `http://localhost:4173`.
-3. In *Branding* indica come home page `https://www.arabodazero.it`, come
-   informativa sulla privacy `https://www.arabodazero.it/privacy.html`, come
-   termini di servizio `https://www.arabodazero.it/termini.html` e
-   `arabodazero.it` tra i domini autorizzati. Le due pagine sono in `public/`.
-4. In *Accesso ai dati* chiedi solo l'ambito
-   `https://www.googleapis.com/auth/drive.appdata`, che dà accesso a una
-   cartella nascosta creata dall'app: non ai file di chi studia.
+<br>
+
+I progressi restano nel browser. Per offrire anche una copia nel Drive di chi studia (così non si perde cancellando i dati del browser e si ritrova sugli altri dispositivi) serve un ID client OAuth di Google. Senza, la funzione non compare e il sito resta identico.
+
+1. Su [Google Cloud Console](https://console.cloud.google.com/) crea un progetto e attiva **Google Drive API**.
+2. In *Credenziali* crea un **ID client OAuth** di tipo *Applicazione web* e aggiungi tra le «origini JavaScript autorizzate» l'indirizzo esatto da cui si apre il sito, senza barra finale: `https://www.arabodazero.it` e `https://arabodazero.it` per il sito pubblicato, `http://localhost:4173` per le prove.
+3. In *Branding* indica come home page `https://www.arabodazero.it`, come informativa sulla privacy `https://www.arabodazero.it/privacy.html`, come termini di servizio `https://www.arabodazero.it/termini.html` e `arabodazero.it` tra i domini autorizzati. Le due pagine sono in `public/`.
+4. In *Accesso ai dati* chiedi solo l'ambito `https://www.googleapis.com/auth/drive.appdata`, che dà accesso a una cartella nascosta creata dall'app e non ai file di chi studia.
 5. Passa l'ID client alla build:
 
 ```sh
 VITE_GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com npm run build
 ```
 
-Su GitHub Pages: *Settings → Secrets and variables → Actions → Variables*, crea
-`GOOGLE_CLIENT_ID` (è un valore pubblico, non un segreto). Il workflow
-`.github/workflows/pages.yml` lo passa alla build con queste righe sotto
-`npm run build`; senza, il riquadro non compare:
+Su GitHub Pages: *Settings → Secrets and variables → Actions → Variables*, crea `GOOGLE_CLIENT_ID` (è un valore pubblico, non un segreto). Il workflow `.github/workflows/pages.yml` lo passa alla build con queste righe sotto `npm run build`; senza, il riquadro non compare:
 
 ```yaml
       - run: npm run build
@@ -108,47 +126,39 @@ Su GitHub Pages: *Settings → Secrets and variables → Actions → Variables*,
           VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
 ```
 
-`drive.appdata` non è un ambito sensibile, quindi non serve la verifica completa
-dell'app: basta pubblicarla («In produzione») dalla pagina *Pubblico*. Finché
-resta «In test» possono collegarsi solo gli utenti di prova indicati lì.
+`drive.appdata` non è un ambito sensibile, quindi non serve la verifica completa dell'app: basta pubblicarla («In produzione») dalla pagina *Pubblico*. Finché resta «In test», possono collegarsi solo gli utenti di prova indicati lì.
 
-Il contenuto salvato è lo stesso backup JSON del pulsante «Esporta backup», e a
-ogni sincronizzazione le due copie vengono unite (`lib/cloud-merge.ts`): niente
-viene sovrascritto, nemmeno studiando su due dispositivi nello stesso giorno.
+Il contenuto salvato è lo stesso backup JSON del pulsante «Esporta backup», e a ogni sincronizzazione le due copie vengono unite (`lib/cloud-merge.ts`): niente viene sovrascritto, nemmeno studiando su due dispositivi nello stesso giorno.
 
-### Interfaccia
+</details>
 
-Lo stile è in `app/design.css` (caricato dopo `app/globals.css`): colori, spazi e raggi sono variabili CSS con le versioni chiara e scura. I caratteri (Inter e Noto Naskh Arabic, licenza OFL) sono in `public/fonts/` e vengono salvati per l'uso offline.
+## Segnalazioni e contributi
 
-```sh
-npx playwright test   # test end-to-end, accessibilità (axe) e tema scuro su mobile
-```
+Critiche costruttive e correzioni sono benvenute. Non serve essere d'accordo con le scelte del progetto: conta aiutare a capire cosa non funziona e come migliorarlo.
 
-## Feedback, correzioni e contributi
+Per segnalare un errore nei contenuti, apri una Issue con:
 
-Le critiche costruttive e le correzioni sono benvenute. Non devi essere d'accordo con le scelte del progetto: ciò che conta è aiutare a individuare cosa non funziona e come migliorarlo.
+- livello, lezione ed esercizio;
+- la formulazione o il comportamento che ritieni scorretto;
+- la correzione che proponi e il ragionamento dietro;
+- una fonte verificabile o una spiegazione linguistica documentata, quando il problema riguarda i materiali didattici;
+- eventuali forme alternative accettabili, differenze di registro o distinzioni tra arabo standard moderno e dialetti. L'obiettivo è migliorare il materiale senza sostituire un'inesattezza con un'altra.
 
-Per segnalare un errore, apri una Issue e includi:
+Sono utili anche segnalazioni di bug, miglioramenti all'accessibilità, traduzioni, spiegazioni più chiare e idee per attività pratiche, con una Issue o una pull request.
 
-- Il livello, la lezione e l'esercizio pertinenti.
-- La formulazione o il comportamento che ritieni scorretto.
-- La correzione che proponi e il ragionamento che la sostiene.
-- Una fonte verificabile o una spiegazione linguistica documentata quando segnali un problema con i materiali didattici.
-- Se esistono più forme accettabili, differenze di registro o distinzioni tra arabo standard moderno e dialetti, specificalo. L'obiettivo è migliorare il materiale senza sostituire un'inesattezza con un'altra.
+> [!CAUTION]
+> Non includere backup, note personali o altri dati privati nelle segnalazioni.
 
-Sono utili anche segnalazioni di bug, miglioramenti all'accessibilità, traduzioni, spiegazioni più chiare e suggerimenti per attività pratiche. Puoi contribuire tramite una Issue o una pull request. 
+## Perché è gratuito
 
-Ti preghiamo di non includere backup, note personali o altri dati privati nelle tue segnalazioni.
-
-## Perché renderlo disponibile a tutti?
-
-Voglio che i miei progetti siano disponibili per chiunque ne abbia bisogno.
-Se costruisco qualcosa per risolvere un mio problema e questo può aiutare anche altre persone, condividerlo ha senso per me.
-
-Arabo da Zero segue questa idea: ridurre le barriere all'apprendimento e permettere ad altri di usare, migliorare e sviluppare lo strumento. Non devi pagare per accedere al corso e non devi contribuire con codice per usarlo.
+Voglio che i miei progetti siano disponibili per chiunque ne abbia bisogno. Se costruisco qualcosa per risolvere un mio problema e può aiutare anche altri, condividerlo ha senso. Arabo da Zero segue questa idea: abbassare le barriere all'apprendimento e permettere ad altri di usare, migliorare e sviluppare lo strumento. Non devi pagare per accedere al corso, né contribuire con codice per usarlo.
 
 ## Licenza
 
-Il codice dell'applicazione è distribuito con licenza MIT: vedi LICENSE.
+Il codice dell'applicazione è distribuito con licenza MIT: vedi [LICENSE](LICENSE).
 
-La licenza del codice non concede automaticamente gli stessi diritti sui materiali didattici. Per informazioni sull'origine e i termini di distribuzione dei contenuti, vedi CONTENT-LICENSE.md.
+La licenza del codice non concede automaticamente gli stessi diritti sui materiali didattici. Per l'origine e i termini di distribuzione dei contenuti, vedi [CONTENT-LICENSE.md](CONTENT-LICENSE.md).
+
+---
+
+<sub>Realizzato da <a href="https://github.com/gabrielevierti">Gabriele Vierti</a> a Milano.</sub>
